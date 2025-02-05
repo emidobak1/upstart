@@ -11,20 +11,29 @@ export default function LoginForm() {
     email: '',
     password: '',
   });
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null); // Reset error state
+  
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
-      if (!response.ok) throw new Error('Login failed');
-      router.push('/dashboard');
+  
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Login failed');
+      }
+  
+      // Redirect to the student dashboard
+      router.push('/dashboard/student');
     } catch (error) {
       console.error(error);
+      setError(error instanceof Error ? error.message : 'Login failed');
     }
   };
 
@@ -60,6 +69,12 @@ export default function LoginForm() {
           />
         </div>
       </div>
+
+      {error && (
+        <div className="text-sm text-red-600">
+          {error}
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center">

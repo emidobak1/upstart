@@ -103,7 +103,7 @@ export default function LandingPage() {
               The platform built for your success
             </h2>
             <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-              We've simplified the process of finding and securing meaningful startup experience
+              We have simplified the process of finding and securing meaningful startup experience
             </p>
           </div>
 

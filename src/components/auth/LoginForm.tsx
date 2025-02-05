@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -9,65 +11,52 @@ export default function LoginForm() {
     email: '',
     password: '',
   });
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
     try {
-      const response = await fetch('/api/auth', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-
+      if (!response.ok) throw new Error('Login failed');
       router.push('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+    } catch (error) {
+      console.error(error);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-      {error && (
-        <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email address
+      <div className="space-y-5">
+        <div className="relative group">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email
           </label>
           <input
             id="email"
-            name="email"
             type="email"
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+            placeholder="your@email.com"
           />
         </div>
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <div className="relative group">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
             Password
           </label>
           <input
             id="password"
-            name="password"
             type="password"
             required
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+            placeholder="••••••••"
           />
         </div>
       </div>
@@ -80,23 +69,24 @@ export default function LoginForm() {
             type="checkbox"
             className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
           />
-          <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+          <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
             Remember me
           </label>
         </div>
-
-        <div className="text-sm">
-          <a href="#" className="font-medium text-black hover:text-gray-900">
-            Forgot your password?
-          </a>
-        </div>
+        <Link
+          href="/forgot-password"
+          className="text-sm text-gray-700 hover:text-black transition-colors"
+        >
+          Forgot password?
+        </Link>
       </div>
 
       <button
         type="submit"
-        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+        className="w-full group flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
       >
         Sign in
+        <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
       </button>
     </form>
   );

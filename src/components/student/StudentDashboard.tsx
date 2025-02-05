@@ -1,52 +1,160 @@
 // src/components/student/StudentDashboard.tsx
 'use client';
 
-import Link from 'next/link';
-
-// Simulated job postings data (replace with a database later)
-const jobPostings = [
-  {
-    id: 1,
-    title: 'Frontend Developer Intern',
-    company: 'Tech Corp',
-    location: 'Remote',
-    description: 'Join our team as a Frontend Developer Intern and work on cutting-edge projects.',
-  },
-  {
-    id: 2,
-    title: 'Data Analyst Intern',
-    company: 'Data Insights',
-    location: 'New York, NY',
-    description: 'We are looking for a Data Analyst Intern to help us analyze and visualize data.',
-  },
-  {
-    id: 3,
-    title: 'Marketing Intern',
-    company: 'Creative Agency',
-    location: 'Los Angeles, CA',
-    description: 'Assist our marketing team in creating campaigns and managing social media.',
-  },
-];
+import { ArrowRight, Users, Star, ChevronRight, Globe } from 'lucide-react';
 
 export default function StudentDashboard() {
+  // Hardcoded job postings data
+  const jobs = [
+    {
+      id: 1,
+      title: 'Frontend Developer Intern',
+      company: 'Tech Corp',
+      location: 'Remote',
+      tags: ['React', 'UI/UX', 'JavaScript'],
+    },
+    {
+      id: 2,
+      title: 'Data Analyst Intern',
+      company: 'Data Insights',
+      location: 'New York, NY',
+      tags: ['SQL', 'Excel', 'Tableau'],
+    },
+    {
+      id: 3,
+      title: 'Marketing Intern',
+      company: 'Creative Agency',
+      location: 'Los Angeles, CA',
+      tags: ['Social Media', 'Content Creation', 'Campaigns'],
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Job Postings</h1>
-        <div className="space-y-6">
-          {jobPostings.map((job) => (
-            <div key={job.id} className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-gray-800">{job.title}</h2>
-              <p className="text-gray-600 mt-2">{job.company} - {job.location}</p>
-              <p className="text-gray-500 mt-4">{job.description}</p>
-              <Link
-                href={`/dashboard/student/jobs/${job.id}`}
-                className="inline-block mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                View Details
-              </Link>
+    <div className="min-h-screen bg-white">
+      {/* Hero Section with animated gradient background */}
+      <div className="relative pt-20 px-6 pb-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white">
+          <div className="absolute h-full w-full">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
+            <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+            <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto relative">
+          <div className="text-center mb-16">
+            <h1 className="text-4xl font-medium text-gray-900 leading-tight mb-6">
+              Welcome to Your{' '}
+              <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+                Student Dashboard
+              </span>
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              Explore job postings, track your applications, and build your career with real startup projects.
+            </p>
+          </div>
+
+          {/* Job Postings Section */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8 relative backdrop-blur-xl bg-white/50">
+            <div className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm px-4 py-1 rounded-full shadow-lg">
+              Featured Jobs
             </div>
-          ))}
+            <div className="space-y-6">
+              {jobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="border border-gray-100 p-4 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-medium mb-1 group-hover:text-blue-600 transition-colors">
+                        {job.title}
+                      </h3>
+                      <p className="text-sm text-gray-600">{job.company}</p>
+                    </div>
+                    <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full group-hover:bg-green-100 transition-colors">
+                      {job.location}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    {job.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="text-xs bg-gray-100 px-2 py-1 rounded-full group-hover:bg-gray-200 transition-colors"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Section with hover effects */}
+      <div className="py-20 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            {[
+              { number: '10+', label: 'Applications Submitted', color: 'from-blue-500' },
+              { number: '5+', label: 'Interviews Scheduled', color: 'from-purple-500' },
+              { number: '2+', label: 'Offers Received', color: 'from-pink-500' },
+            ].map((stat, index) => (
+              <div key={index} className="group hover:transform hover:scale-105 transition-all duration-300">
+                <div className={`text-4xl font-medium bg-gradient-to-r ${stat.color} to-gray-900 bg-clip-text text-transparent mb-2`}>
+                  {stat.number}
+                </div>
+                <div className="text-gray-600 group-hover:text-gray-900 transition-colors">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+          <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-purple-50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 relative">
+          <div className="text-center mb-16">
+            <span className="text-sm text-gray-600 bg-blue-50/50 px-4 py-2 rounded-full">
+              Why Choose Upstart
+            </span>
+            <h2 className="mt-6 text-3xl text-gray-800">
+              The platform built for your success
+            </h2>
+            <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+              We have simplified the process of finding and securing meaningful startup experience
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { icon: Globe, title: 'Real Projects', description: 'Work on actual projects that make real impact at growing startups' },
+              { icon: Users, title: 'Direct Connection', description: 'Connect and work directly with startup founders and team leads' },
+              { icon: Star, title: 'Build Portfolio', description: 'Create an impressive portfolio with real startup projects' },
+            ].map((feature, index) => (
+              <div
+                key={index}
+                className="relative group bg-white/70 backdrop-blur-sm p-8 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+              >
+                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
+                  <feature.icon className="text-blue-700/70" size={20} />
+                </div>
+                <h3 className="text-lg text-gray-800 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ export default function Header() {
 
   const navLinks = [
     { href: '/', label: 'Home' },
+    { href: '/dashboard/student', label: 'Jobs' },
     { href: '/login', label: 'Login' },
     { href: '/signup', label: 'SignUp' }
   ];

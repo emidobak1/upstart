@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginForm() {
   const router = useRouter();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,7 +17,7 @@ export default function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // Reset error state
+    setError(null);
   
     try {
       const response = await fetch('/api/auth/login', {
@@ -28,7 +30,12 @@ export default function LoginForm() {
         const data = await response.json();
         throw new Error(data.error || 'Login failed');
       }
-  
+
+      const data = await response.json();
+      
+      // Update auth context with the user's information
+      login(data.user.email); // Using email as username for now
+      
       // Redirect to the student dashboard
       router.push('/dashboard/student');
     } catch (error) {

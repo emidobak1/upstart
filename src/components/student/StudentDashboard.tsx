@@ -1,8 +1,7 @@
-// src/components/student/StudentDashboard.tsx
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, Users, Star, ChevronRight, Globe, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 export default function StudentDashboard() {
   // Hardcoded job postings data
@@ -71,7 +70,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section with animated gradient background */}
       <div className="relative pt-20 px-6 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white">
           <div className="absolute h-full w-full">
@@ -84,13 +82,13 @@ export default function StudentDashboard() {
         <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-16">
             <h1 className="text-4xl font-medium text-gray-900 leading-tight mb-6">
-              Welcome to Your{' '}
+              Available{' '}
               <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-                Student Dashboard
+                Projects
               </span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Explore job postings, track your applications, and build your career with real startup projects.
+              Explore opportunities and find your next project
             </p>
           </div>
 
@@ -128,7 +126,7 @@ export default function StudentDashboard() {
           {/* Job Postings Section */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 relative backdrop-blur-xl bg-white/50">
             <div className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm px-4 py-1 rounded-full shadow-lg">
-              Featured Jobs
+              Featured Projects
             </div>
             <div className="space-y-6">
               {filteredJobs.map((job) => (
@@ -160,71 +158,6 @@ export default function StudentDashboard() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Section with hover effects */}
-      <div className="py-20 border-t border-gray-100">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            {[
-              { number: '10+', label: 'Applications Submitted', color: 'from-blue-500' },
-              { number: '5+', label: 'Interviews Scheduled', color: 'from-purple-500' },
-              { number: '2+', label: 'Offers Received', color: 'from-pink-500' },
-            ].map((stat, index) => (
-              <div key={index} className="group hover:transform hover:scale-105 transition-all duration-300">
-                <div className={`text-4xl font-medium bg-gradient-to-r ${stat.color} to-gray-900 bg-clip-text text-transparent mb-2`}>
-                  {stat.number}
-                </div>
-                <div className="text-gray-600 group-hover:text-gray-900 transition-colors">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
-          <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-purple-50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
-        </div>
-
-        <div className="max-w-6xl mx-auto px-6 relative">
-          <div className="text-center mb-16">
-            <span className="text-sm text-gray-600 bg-blue-50/50 px-4 py-2 rounded-full">
-              Why Choose Upstart
-            </span>
-            <h2 className="mt-6 text-3xl text-gray-800">
-              The platform built for your success
-            </h2>
-            <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-              We have simplified the process of finding and securing meaningful startup experience
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { icon: Globe, title: 'Real Projects', description: 'Work on actual projects that make real impact at growing startups' },
-              { icon: Users, title: 'Direct Connection', description: 'Connect and work directly with startup founders and team leads' },
-              { icon: Star, title: 'Build Portfolio', description: 'Create an impressive portfolio with real startup projects' },
-            ].map((feature, index) => (
-              <div
-                key={index}
-                className="relative group bg-white/70 backdrop-blur-sm p-8 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
-              >
-                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
-                  <feature.icon className="text-blue-700/70" size={20} />
-                </div>
-                <h3 className="text-lg text-gray-800 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
       </div>

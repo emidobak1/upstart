@@ -1,4 +1,3 @@
-// src/app/(auth)/signup/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -10,7 +9,16 @@ export default function SignUp() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: 'student'
+    role: 'student',
+    // Student fields
+    firstName: '',
+    lastName: '',
+    school: '',
+    graduationYear: '',
+    location: '',
+    // Startup fields
+    companyName: '',
+    companySize: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,6 +37,134 @@ export default function SignUp() {
     }
   };
 
+  const renderStudentFields = () => (
+    <>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="relative group">
+          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+            First Name
+          </label>
+          <input
+            id="firstName"
+            type="text"
+            required
+            value={formData.firstName}
+            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+          />
+        </div>
+        <div className="relative group">
+          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+            Last Name
+          </label>
+          <input
+            id="lastName"
+            type="text"
+            required
+            value={formData.lastName}
+            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+          />
+        </div>
+      </div>
+      <div className="relative group">
+        <label htmlFor="school" className="block text-sm font-medium text-gray-700 mb-1">
+          School
+        </label>
+        <input
+          id="school"
+          type="text"
+          required
+          value={formData.school}
+          onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+          className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="relative group">
+          <label htmlFor="graduationYear" className="block text-sm font-medium text-gray-700 mb-1">
+            Expected Graduation Year
+          </label>
+          <input
+            id="graduationYear"
+            type="text"
+            required
+            value={formData.graduationYear}
+            onChange={(e) => setFormData({ ...formData, graduationYear: e.target.value })}
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+            placeholder="2025"
+          />
+        </div>
+        <div className="relative group">
+          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+            Location
+          </label>
+          <input
+            id="location"
+            type="text"
+            required
+            value={formData.location}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+            placeholder="City, Country"
+          />
+        </div>
+      </div>
+    </>
+  );
+
+  const renderStartupFields = () => (
+    <>
+      <div className="relative group">
+        <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+          Company Name
+        </label>
+        <input
+          id="companyName"
+          type="text"
+          required
+          value={formData.companyName}
+          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+          className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="relative group">
+          <label htmlFor="companySize" className="block text-sm font-medium text-gray-700 mb-1">
+            Company Size
+          </label>
+          <select
+            id="companySize"
+            required
+            value={formData.companySize}
+            onChange={(e) => setFormData({ ...formData, companySize: e.target.value })}
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+          >
+            <option value="">Select size</option>
+            <option value="1-10">1-10 employees</option>
+            <option value="11-50">11-50 employees</option>
+            <option value="51-200">51-200 employees</option>
+            <option value="201-500">201-500 employees</option>
+          </select>
+        </div>
+        <div className="relative group">
+          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+            Location
+          </label>
+          <input
+            id="location"
+            type="text"
+            required
+            value={formData.location}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
+            placeholder="City, Country"
+          />
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left Panel - Form */}
@@ -38,7 +174,7 @@ export default function SignUp() {
           <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
         </div>
         
-        <div className="max-w-md w-full space-y-8 relative backdrop-blur-sm bg-white/80 p-8 rounded-2xl shadow-xl">
+        <div className="max-w-2xl w-full space-y-8 relative backdrop-blur-sm bg-white/80 p-8 rounded-2xl shadow-xl">
           <div className="text-center">
             <div className="w-12 h-12 bg-black rounded-xl mx-auto flex items-center justify-center mb-6 shadow-lg">
               <span className="text-white text-xl font-medium">U</span>
@@ -50,6 +186,7 @@ export default function SignUp() {
             {/* Role Toggle */}
             <div className="mt-8 inline-flex rounded-full border border-gray-200 p-1 shadow-lg bg-white">
               <button
+                type="button"
                 onClick={() => setFormData({ ...formData, role: 'student' })}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                   formData.role === 'student'
@@ -61,6 +198,7 @@ export default function SignUp() {
                 Student
               </button>
               <button
+                type="button"
                 onClick={() => setFormData({ ...formData, role: 'startup' })}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                   formData.role === 'startup'
@@ -110,6 +248,9 @@ export default function SignUp() {
                   placeholder="••••••••"
                 />
               </div>
+
+              {/* Render role-specific fields */}
+              {formData.role === 'student' ? renderStudentFields() : renderStartupFields()}
             </div>
 
             <button

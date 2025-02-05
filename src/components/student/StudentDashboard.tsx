@@ -1,7 +1,8 @@
 // src/components/student/StudentDashboard.tsx
 'use client';
 
-import { ArrowRight, Users, Star, ChevronRight, Globe } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, Users, Star, ChevronRight, Globe, Search, X } from 'lucide-react';
 
 export default function StudentDashboard() {
   // Hardcoded job postings data
@@ -27,7 +28,46 @@ export default function StudentDashboard() {
       location: 'Los Angeles, CA',
       tags: ['Social Media', 'Content Creation', 'Campaigns'],
     },
+    {
+      id: 4,
+      title: 'Backend Developer Intern',
+      company: 'Code Masters',
+      location: 'San Francisco, CA',
+      tags: ['Node.js', 'Python', 'API Development'],
+    },
+    {
+      id: 5,
+      title: 'UI/UX Designer Intern',
+      company: 'Design Studio',
+      location: 'Chicago, IL',
+      tags: ['Figma', 'Wireframing', 'Prototyping'],
+    },
   ];
+
+  // State for search and filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+
+  // Available skills for filtering
+  const allSkills = ['Marketing', 'UI/UX', 'JavaScript', 'Data Analyst', 'Business Development', 'Tableau', 'Social Media', 'Content Creation', 'Accounting', 'Copywriting', 'Python', 'Design'];
+
+  // Filter jobs based on search and selected skills
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          job.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesSkills = selectedSkills.length === 0 || selectedSkills.every((skill) => job.tags.includes(skill));
+
+    return matchesSearch && matchesSkills;
+  });
+
+  // Toggle skill filter
+  const toggleSkill = (skill: string) => {
+    setSelectedSkills((prev) =>
+      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -54,13 +94,44 @@ export default function StudentDashboard() {
             </p>
           </div>
 
+          {/* Search and Filter Section */}
+          <div className="mb-12">
+            <div className="relative mb-6">
+              <input
+                type="text"
+                placeholder="Search jobs by title, company, or skills..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <Search className="absolute right-3 top-3 text-gray-400" size={20} />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {allSkills.map((skill) => (
+                <button
+                  key={skill}
+                  onClick={() => toggleSkill(skill)}
+                  className={`px-4 py-2 rounded-full text-sm flex items-center gap-2 transition-all duration-300 ${
+                    selectedSkills.includes(skill)
+                      ? 'bg-blue-500 text-white hover:bg-blue-600'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {skill}
+                  {selectedSkills.includes(skill) && <X size={16} />}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Job Postings Section */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 relative backdrop-blur-xl bg-white/50">
             <div className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm px-4 py-1 rounded-full shadow-lg">
               Featured Jobs
             </div>
             <div className="space-y-6">
-              {jobs.map((job) => (
+              {filteredJobs.map((job) => (
                 <div
                   key={job.id}
                   className="border border-gray-100 p-4 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white"

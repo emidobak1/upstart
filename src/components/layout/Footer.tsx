@@ -1,7 +1,4 @@
 const Footer = () => {
-  console.log('Footer rendering'); // Add this debug line
-
-
   return (
     <footer className="bg-gray-50 border-t border-gray-100">
       <div className="max-w-6xl mx-auto px-6 py-12">

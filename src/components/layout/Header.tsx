@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { User } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
-  // Adjust navLinks based on authentication state
   const getNavLinks = () => {
     const baseLinks = [
       { href: '/', label: 'Home' },
@@ -16,7 +16,7 @@ export default function Header() {
 
     const authLinks = user ? [
       { href: '/dashboard/student', label: 'Jobs' },
-      // Add more authenticated user links here
+      { href: '/dashboard/profile', label: 'Profile' }
     ] : [
       { href: '/login', label: 'Login' },
       { href: '/signup', label: 'SignUp' }
@@ -52,17 +52,12 @@ export default function Header() {
               </Link>
             ))}
             {user && (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">
-                  Welcome, {user.username}
-                </span>
-                <button
-                  onClick={logout}
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  Logout
-                </button>
-              </div>
+              <button
+                onClick={logout}
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                Logout
+              </button>
             )}
           </div>
         </div>

@@ -1,33 +1,42 @@
 // src/app/api/auth/signup/route.ts
 import { NextResponse } from 'next/server';
+import type { User } from '@/lib/types';
+import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, role } = await request.json();
+    const userData: User = await request.json();
+    const cookieStore = await cookies();
+    
+    const existingUsers = cookieStore.get('users')?.value;
+    const users: User[] = existingUsers ? JSON.parse(existingUsers) : [];
 
-    // Validate the input
-    if (!email || !password || !role) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (users.find(user => user.email === userData.email)) {
+      return NextResponse.json({ error: 'User already exists' }, { status: 400 });
     }
 
-    // Create a user object (this will later be replaced with a database call)
-    const user = { email, password, role };
-
-    // Create a response object
+    users.push(userData);
+    
     const response = NextResponse.json(
-      { message: 'Signup successful', user },
+      { message: 'Signup successful', user: userData },
       { status: 200 }
     );
 
-    // Store the user data in cookies using NextResponse
-    response.cookies.set('user', JSON.stringify(user), {
+    // Set both users and current user cookies
+    response.cookies.set('users', JSON.stringify(users), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7, // 1 week
+      maxAge: 60 * 60 * 24 * 7,
       path: '/',
     });
 
-    // Return the response
+    response.cookies.set('user', JSON.stringify(userData), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
+
     return response;
   } catch (error) {
     console.error('Signup error:', error);

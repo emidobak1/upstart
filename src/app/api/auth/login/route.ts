@@ -1,39 +1,39 @@
 // src/app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-
-// Simulated user data (replace this with a database call later)
-const simulatedUser = {
-  email: 'emi.dobak@outlook.com',
-  password: '1234', // In a real app, never store plain-text passwords!
-  role: 'student',
-};
+import type { User } from '@/lib/types';
+import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
-    // Parse the request body
     const { email, password } = await request.json();
+    const cookieStore = await cookies();
 
-    // Validate the input
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    const storedUsers = cookieStore.get('users')?.value;
+    const users: User[] = storedUsers ? JSON.parse(storedUsers) : [];
 
-    // Simulate user lookup (replace with database query later)
-    if (email !== simulatedUser.email || password !== simulatedUser.password) {
+    const user = users.find(u => u.email === email && u.password === password);
+
+    if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    // Return a success response
-    return NextResponse.json(
-      { message: 'Login successful', user: simulatedUser },
+    const response = NextResponse.json(
+      { message: 'Login successful', user },
       { status: 200 }
     );
+
+    // Set current user in cookies
+    response.cookies.set('user', JSON.stringify(user), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

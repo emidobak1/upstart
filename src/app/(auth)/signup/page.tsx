@@ -29,8 +29,10 @@ export default function SignUp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
+  
       if (!response.ok) throw new Error('Signup failed');
+      const data = await response.json();
+      login(data.user.email);
       router.push(formData.role === 'student' ? '/dashboard/student' : '/dashboard/startup');
     } catch (error) {
       console.error(error);
@@ -288,4 +290,8 @@ export default function SignUp() {
       </div>
     </div>
   );
+}
+
+function login(email: unknown) {
+  throw new Error('Function not implemented.');
 }

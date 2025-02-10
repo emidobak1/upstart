@@ -1,39 +1,31 @@
 // src/app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-import type { User } from '@/lib/types';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
-    const cookieStore = await cookies();
+    
+    // Initialize Supabase client
+    const supabase = createRouteHandlerClient({ cookies });
 
-    const storedUsers = cookieStore.get('users')?.value;
-    const users: User[] = storedUsers ? JSON.parse(storedUsers) : [];
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-    const user = users.find(u => u.email === email && u.password === password);
-
-    if (!user) {
+    if (error) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: error.message },
         { status: 401 }
       );
     }
 
-    const response = NextResponse.json(
-      { message: 'Login successful', user },
+    return NextResponse.json(
+      { message: 'Login successful', user: data.user },
       { status: 200 }
     );
-
-    // Set current user in cookies
-    response.cookies.set('user', JSON.stringify(user), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: '/',
-    });
-
-    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

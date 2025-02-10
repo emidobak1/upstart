@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import type { Database } from '@/types/supabase';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -20,24 +22,24 @@ export default function LoginForm() {
     setError(null);
   
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const supabase = createClientComponentClient<Database>();
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
       });
-  
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Login failed');
+
+      if (error) {
+        throw new Error(error.message);
       }
 
-      const data = await response.json();
-      
-      // Update auth context with the user's information
-      login(data.user.email); // Using email as username for now
-      
-      // Redirect to the student dashboard
-      router.push('/dashboard/student');
+      if (data?.user) {
+        // Use email from authenticated user
+        if (data.user.email) {
+          login(data.user.email);
+          router.push('/dashboard/student'); // For now, just redirect to student dashboard
+        }
+      }
     } catch (error) {
       console.error(error);
       setError(error instanceof Error ? error.message : 'Login failed');

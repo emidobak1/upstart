@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { User } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
@@ -15,7 +14,11 @@ export default function Header() {
     ];
 
     const authLinks = user ? [
-      { href: '/dashboard/student', label: 'Jobs' },
+      // If user has a role, direct to appropriate dashboard
+      { 
+        href: user.role === 'student' ? '/dashboard/student' : '/dashboard/startup', 
+        label: 'Dashboard' 
+      },
       { href: '/dashboard/profile', label: 'Profile' }
     ] : [
       { href: '/login', label: 'Login' },
@@ -26,6 +29,14 @@ export default function Header() {
   };
 
   const navLinks = getNavLinks();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
@@ -53,7 +64,7 @@ export default function Header() {
             ))}
             {user && (
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="text-sm text-gray-600 hover:text-gray-900"
               >
                 Logout

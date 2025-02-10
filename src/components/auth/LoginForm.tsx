@@ -1,48 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import type { Database } from '@/types/supabase';
 
 export default function LoginForm() {
-  const router = useRouter();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
+    console.log('Starting login process...'); // Debug log
   
     try {
-      const supabase = createClientComponentClient<Database>();
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (data?.user) {
-        // Use email from authenticated user
-        if (data.user.email) {
-          login(data.user.email);
-          router.push('/dashboard/student'); // For now, just redirect to student dashboard
-        }
-      }
+      console.log('Attempting to login with:', formData.email); // Debug log
+      await login(formData.email, formData.password);
+      console.log('Login successful'); // Debug log
     } catch (error) {
-      console.error(error);
-      setError(error instanceof Error ? error.message : 'Login failed');
+      console.error('Login error details:', error); // Detailed error log
+      setError(error instanceof Error ? error.message : 'Failed to login');
+    } finally {
+      setIsLoading(false);
+      console.log('Login process completed'); // Debug log
     }
   };
 
@@ -61,6 +48,7 @@ export default function LoginForm() {
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
             placeholder="your@email.com"
+            disabled={isLoading}
           />
         </div>
         <div className="relative group">
@@ -75,6 +63,7 @@ export default function LoginForm() {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
             placeholder="••••••••"
+            disabled={isLoading}
           />
         </div>
       </div>
@@ -107,9 +96,12 @@ export default function LoginForm() {
 
       <button
         type="submit"
-        className="w-full group flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+        disabled={isLoading}
+        className={`w-full group flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
+          isLoading ? 'opacity-70 cursor-not-allowed' : ''
+        }`}
       >
-        Sign in
+        {isLoading ? 'Signing in...' : 'Sign in'}
         <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
       </button>
     </form>

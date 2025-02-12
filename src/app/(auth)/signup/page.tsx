@@ -21,11 +21,8 @@ export default function SignUp() {
     firstName: '',
     lastName: '',
     school: '',
-    graduationYear: '',
-    location: '',
     // Startup fields
     companyName: '',
-    companySize: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,36 +116,6 @@ export default function SignUp() {
           className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="relative group">
-          <label htmlFor="graduationYear" className="block text-sm font-medium text-gray-700 mb-1">
-            Expected Graduation Year
-          </label>
-          <input
-            id="graduationYear"
-            type="text"
-            required
-            value={formData.graduationYear}
-            onChange={(e) => setFormData({ ...formData, graduationYear: e.target.value })}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
-            placeholder="2025"
-          />
-        </div>
-        <div className="relative group">
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-            Location
-          </label>
-          <input
-            id="location"
-            type="text"
-            required
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
-            placeholder="City, Country"
-          />
-        </div>
-      </div>
     </>
   );
 
@@ -166,40 +133,6 @@ export default function SignUp() {
           onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
           className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
         />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="relative group">
-          <label htmlFor="companySize" className="block text-sm font-medium text-gray-700 mb-1">
-            Company Size
-          </label>
-          <select
-            id="companySize"
-            required
-            value={formData.companySize}
-            onChange={(e) => setFormData({ ...formData, companySize: e.target.value })}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
-          >
-            <option value="">Select size</option>
-            <option value="1-10">1-10 employees</option>
-            <option value="11-50">11-50 employees</option>
-            <option value="51-200">51-200 employees</option>
-            <option value="201-500">201-500 employees</option>
-          </select>
-        </div>
-        <div className="relative group">
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-            Location
-          </label>
-          <input
-            id="location"
-            type="text"
-            required
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
-            placeholder="City, Country"
-          />
-        </div>
       </div>
     </>
   );

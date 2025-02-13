@@ -32,42 +32,51 @@ export default function SignUp() {
   
     try {
       // First create the auth user
-      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        options: {
+          data: {
+            role: formData.role
+          }
+        }
       });
   
-      if (signUpError) {
-        throw new Error(signUpError.message);
+      if (signUpError) throw signUpError;
+  
+      if (authData.user) {
+        // Create the user record first
+        const { error: userError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: authData.user.id,
+              role: formData.role,
+            }
+          ]);
+  
+        if (userError) throw userError;
+  
+        // If it's a student, UPDATE (not insert) the students record
+        if (formData.role === 'student') {
+          const { error: studentError } = await supabase
+            .from('students')
+            .update({  // Use update instead of insert
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              university: formData.school
+            })
+            .eq('id', authData.user.id);  // Match on the id
+  
+          if (studentError) throw studentError;
+        }
+  
+        await login(formData.email, formData.password);
+        router.push(formData.role === 'student' ? '/dashboard/student' : '/dashboard/startup');
       }
-  
-      if (!user) {
-        throw new Error('Signup failed - no user returned');
-      }
-  
-      // Then create the user record in your users table
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert([
-          {
-            id: user.id,          // This will be the auth.users.id
-            role: formData.role,  // 'student' or 'startup'
-            // created_at will be automatically set by Supabase timestamptz default
-          }
-        ]);
-  
-      if (profileError) {
-        throw new Error('User profile creation failed: ' + profileError.message);
-      }
-  
-      // If everything is successful, log in and redirect
-      await login(formData.email, formData.password);
-      router.push(formData.role === 'student' ? '/dashboard/student' : '/dashboard/startup');
-  
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred during signup';
-      console.error('Signup error:', errorMessage);
-      setError(errorMessage);
+      console.error('Signup error:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred during signup');
     } finally {
       setLoading(false);
     }

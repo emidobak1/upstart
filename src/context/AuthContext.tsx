@@ -11,7 +11,7 @@ interface UserData extends User {
 
 interface AuthContextType {
   user: UserData | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<'student' | 'startup' | undefined>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -86,46 +86,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('Starting login process in AuthContext...'); // Debug log
-      console.log('Supabase instance:', !!supabase); // Check if supabase is initialized
+      console.log('Starting login process in AuthContext...'); 
       
       const signInResponse = await supabase.auth.signInWithPassword({
         email,
         password
-      }).catch(e => {
-        console.error('Supabase signIn error caught:', e);
-        throw e;
       });
       
-      console.log('Sign in response:', signInResponse); // Log the full response
-      
       const { data: { user: authUser }, error } = signInResponse;
-
+  
       if (error) {
-        console.error('Supabase auth error:', error); // Debug log
+        console.error('Supabase auth error:', error);
         throw error;
       }
-
-      console.log('Supabase auth successful:', authUser); // Debug log
-
+  
       if (authUser) {
         const { data } = await supabase
           .from('users')
           .select('role')
           .eq('id', authUser.id)
           .single();
-
-        console.log('User role data:', data); // Debug log
-
-        // Redirect based on user role
-        if (data?.role === 'student') {
-          router.push('/dashboard/student');
-        } else if (data?.role === 'startup') {
-          router.push('/dashboard/startup');
-        }
+  
+        setUser({
+          ...authUser,
+          role: data?.role
+        });
+  
+        return data?.role; // Return the role for the login page to handle redirect
       }
     } catch (error) {
-      console.error('Login error in AuthContext:', error); // Debug log
+      console.error('Login error in AuthContext:', error);
       throw error;
     }
   };

@@ -5,11 +5,9 @@ import Link from 'next/link';
 import { ArrowRight, Lock } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-
 
 export default function LoginPage() {
-  const router = useRouter();  // Add this line at the start of your component
+  const router = useRouter();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -24,25 +22,14 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      await login(formData.email, formData.password);
+      const role = await login(formData.email, formData.password);
       
-      // Fetch the user's role from Supabase
-      const supabase = createClientComponentClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-  
-        // Redirect based on role
-        if (userData?.role === 'student') {
-          router.push('/dashboard/student');
-        } else if (userData?.role === 'startup') {
-          router.push('/dashboard/startup');
-        }
+      if (!role) {
+        throw new Error('Failed to get user role');
+      }
+
+      if (role === 'student' || role === 'startup') {
+        router.replace(`/dashboard/${role}`);
       }
     } catch (error) {
       console.error('Login error:', error);

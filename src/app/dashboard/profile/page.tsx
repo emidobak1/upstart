@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { PencilLine, Github, Linkedin, Globe } from 'lucide-react';
+import { PencilLine, Github, Linkedin } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface ProfileData {

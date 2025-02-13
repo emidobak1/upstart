@@ -24,98 +24,81 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const supabase = createClientComponentClient();
 
+  // Fetch the user session on initial load
   useEffect(() => {
-    const getUser = async () => {
+    const fetchSession = async () => {
       try {
-        console.log('Checking session...'); // Debug log
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) {
-          console.error('Session error:', error); // Debug log
+          console.error('Session error:', error);
           throw error;
         }
 
         if (session?.user) {
-          console.log('Found session for user:', session.user.email); // Debug log
           const { data } = await supabase
             .from('users')
             .select('role')
             .eq('id', session.user.id)
             .single();
 
-          console.log('User role data:', data); // Debug log
-
           setUser({
             ...session.user,
-            role: data?.role
+            role: data?.role,
           });
+        } else {
+          setUser(null);
         }
       } catch (error) {
-        console.error('Error in getUser:', error); // Debug log
+        console.error('Error fetching session:', error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    getUser();
+    fetchSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event); // Debug log
+    // Listen for auth state changes (e.g., login, logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        const { data } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
         setUser({
           ...session.user,
-          role: data?.role
+          role: session.user.user_metadata?.role, // Adjust this based on your role storage
         });
       } else {
         setUser(null);
       }
-      router.refresh();
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase, router]);
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('Starting login process in AuthContext...'); 
-      
-      const signInResponse = await supabase.auth.signInWithPassword({
+      const { data: { user: authUser }, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
-      
-      const { data: { user: authUser }, error } = signInResponse;
-  
-      if (error) {
-        console.error('Supabase auth error:', error);
-        throw error;
-      }
-  
+
+      if (error) throw error;
+
       if (authUser) {
         const { data } = await supabase
           .from('users')
           .select('role')
           .eq('id', authUser.id)
           .single();
-  
+
         setUser({
           ...authUser,
-          role: data?.role
+          role: data?.role,
         });
-  
-        return data?.role; // Return the role for the login page to handle redirect
+
+        return data?.role; // Return role for redirect logic
       }
     } catch (error) {
-      console.error('Login error in AuthContext:', error);
+      console.error('Login error:', error);
       throw error;
     }
   };
@@ -124,7 +107,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      router.push('/');
+      setUser(null); // Clear user state
+      router.push('/'); // Redirect to home page
     } catch (error) {
       console.error('Logout error:', error);
       throw error;

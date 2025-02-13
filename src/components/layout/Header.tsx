@@ -8,24 +8,30 @@ export default function Header() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
+  // Define navigation links based on authentication state
   const getNavLinks = () => {
     const baseLinks = [
       { href: '/', label: 'Home' },
     ];
 
-    const authLinks = user ? [
-      // If user has a role, direct to appropriate dashboard
-      { 
-        href: user.role === 'student' ? '/dashboard/student' : '/dashboard/startup', 
-        label: 'Dashboard' 
-      },
-      { href: '/dashboard/profile', label: 'Profile' }
-    ] : [
-      { href: '/login', label: 'Login' },
-      { href: '/signup', label: 'SignUp' }
-    ];
+    // If user is logged in, show dashboard and profile links
+    if (user) {
+      return [
+        ...baseLinks,
+        { 
+          href: user.role === 'student' ? '/dashboard/student' : '/dashboard/startup', 
+          label: 'Dashboard' 
+        },
+        { href: '/dashboard/profile', label: 'Profile' },
+      ];
+    }
 
-    return [...baseLinks, ...authLinks];
+    // If user is not logged in, show login and signup links
+    return [
+      ...baseLinks,
+      { href: '/login', label: 'Login' },
+      { href: '/signup', label: 'SignUp' },
+    ];
   };
 
   const navLinks = getNavLinks();

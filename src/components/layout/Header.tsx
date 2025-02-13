@@ -22,7 +22,10 @@ export default function Header() {
           href: user.role === 'student' ? '/dashboard/student' : '/dashboard/startup', 
           label: 'Dashboard' 
         },
-        { href: '/dashboard/student/profile', label: 'Profile' },
+        { 
+          href: user.role === 'student' ? '/dashboard/student/profile' : '/dashboard/startup/profile', 
+          label: 'Profile' 
+        },
       ];
     }
 

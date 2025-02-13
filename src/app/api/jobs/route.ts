@@ -11,7 +11,7 @@
 // export async function GET() {
 //   try {
 //     // Fetch all jobs from the "jobs" table
-//     const { data, error } = await supabase.from('jobs').select('*');
+//     const { data, error } = await supabase.from('companies').select('*');
 
 //     // Handle errors
 //     if (error) {

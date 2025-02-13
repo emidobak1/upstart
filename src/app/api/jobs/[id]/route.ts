@@ -1,4 +1,4 @@
-// src/app/api/jobs/[id]/route.ts
+// //src/app/api/jobs/[id]/route.ts
 // import { NextResponse } from 'next/server';
 // import { createClient } from '@supabase/supabase-js';
 

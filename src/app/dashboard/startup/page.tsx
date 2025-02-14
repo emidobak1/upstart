@@ -63,21 +63,43 @@ export default function CompanyDashboardPage() {
   // Fetch job applications
   const fetchJobApplications = useCallback(async () => {
     if (!user?.id) return;
-
+  
     setLoading(true);
     setError(null);
-
+  
     try {
       const { data, error } = await supabase
         .from('applications')
-        .select('id, job_id, applicant_name, applicant_email, resume_url, created_at')
+        .select(`
+          id,
+          job_id,
+          applicant_name,
+          applicant_email,
+          resume_url,
+          created_at,
+          students (
+            id,
+            first_name,
+            last_name,
+            university,
+            graduation_year,
+            major,
+            github_profile,
+            linkedin_profile,
+            resume,
+            skills,
+            portfolio,
+            availability,
+            profile_visibility
+          )
+        `)
         .eq('company_id', user.id);
-
+  
       if (error) throw error;
-
+  
       setJobApplications(data || []);
     } catch (error) {
-      console.error('Error fetching job applications:', JSON.stringify(error, null, 2));
+      console.error('Error fetching job applications:', error);
       setError('Failed to fetch job applications');
     } finally {
       setLoading(false);

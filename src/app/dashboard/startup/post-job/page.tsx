@@ -76,7 +76,7 @@ export default function PostJobPage() {
     e: React.ChangeEvent<HTMLTextAreaElement>,
     field: 'requirements' | 'responsibilities'
   ) => {
-    const values = e.target.value.split('\n').filter(Boolean); // Split by newline and remove empty lines
+    const values = e.target.value.split('\n').filter(Boolean);
     setFormData(prev => ({
       ...prev,
       [field]: values,

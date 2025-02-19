@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, initiateLogout } = useAuth();
 
   // Define navigation links based on authentication state
   const getNavLinks = () => {
@@ -33,14 +33,6 @@ export default function Header() {
   };
 
   const navLinks = getNavLinks();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
 
   return (
     <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
@@ -71,7 +63,7 @@ export default function Header() {
             ))}
             {user && (
               <button
-                onClick={handleLogout}
+                onClick={initiateLogout}
                 className="text-sm text-gray-600 hover:text-gray-900"
               >
                 Logout

@@ -52,7 +52,7 @@ export default function StudentDashboard() {
           companies (
             name
           ),
-          job_tag_mappings!inner (
+          job_tag_mappings (
             job_tags (
               name
             )
@@ -73,7 +73,7 @@ export default function StudentDashboard() {
         company_id: job.company_id,
         location: job.location,
         company_name: job.companies?.name || 'Unknown Company',
-        tags: job.job_tag_mappings.map(mapping => mapping.job_tags.name)
+        tags: job.job_tag_mappings ? job.job_tag_mappings.map(mapping => mapping.job_tags.name) : []
       }));
 
       setJobs(transformedJobs);
@@ -172,9 +172,6 @@ export default function StudentDashboard() {
 
           {/* Job Postings Section */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 relative backdrop-blur-xl bg-white/50">
-            <div className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm px-4 py-1 rounded-full shadow-lg">
-              Featured Projects
-            </div>
             <div className="space-y-6">
               {filteredJobs.map((job) => (
                 <div

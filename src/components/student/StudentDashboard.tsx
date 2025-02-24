@@ -1,62 +1,109 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+interface JobTag {
+  name: string;
+}
+
+interface JobTagMapping {
+  job_tags: JobTag;
+}
+
+interface Company {
+  name: string;
+}
+
+interface JobData {
+  id: string;
+  title: string;
+  company_id: string;
+  location: string;
+  companies: Company;
+  job_tag_mappings: JobTagMapping[];
+}
+
+interface Job {
+  id: string;
+  title: string;
+  company_id: string;
+  location: string;
+  tags: string[];
+  company_name?: string;
+}
 
 export default function StudentDashboard() {
-  // Hardcoded job postings data
-  const jobs = [
-    {
-      id: 1,
-      title: 'Frontend Developer Intern',
-      company: 'Tech Corp',
-      location: 'Remote',
-      tags: ['React', 'UI/UX', 'JavaScript'],
-    },
-    {
-      id: 2,
-      title: 'Data Analyst Intern',
-      company: 'Data Insights',
-      location: 'New York, NY',
-      tags: ['SQL', 'Excel', 'Tableau'],
-    },
-    {
-      id: 3,
-      title: 'Marketing Intern',
-      company: 'Creative Agency',
-      location: 'Los Angeles, CA',
-      tags: ['Social Media', 'Content Creation', 'Campaigns'],
-    },
-    {
-      id: 4,
-      title: 'Backend Developer Intern',
-      company: 'Code Masters',
-      location: 'San Francisco, CA',
-      tags: ['Node.js', 'Python', 'API Development'],
-    },
-    {
-      id: 5,
-      title: 'UI/UX Designer Intern',
-      company: 'Design Studio',
-      location: 'Chicago, IL',
-      tags: ['Figma', 'Wireframing', 'Prototyping'],
-    },
-  ];
-
-  // State for search and filters
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
 
-  // Available skills for filtering
-  const allSkills = ['Marketing', 'UI/UX', 'JavaScript', 'Data Analyst', 'Business Development', 'Tableau', 'Social Media', 'Content Creation', 'Accounting', 'Copywriting', 'Python', 'Design'];
+  useEffect(() => {
+    const fetchJobs = async () => {
+      const supabase = createClientComponentClient();
+
+      // Fetch jobs with company names
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select(`
+          *,
+          companies (
+            name
+          ),
+          job_tag_mappings (
+            job_tags (
+              name
+            )
+          )
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (jobsError) {
+        console.error('Error fetching jobs:', jobsError);
+        return;
+      }
+
+      // Transform the data to match our interface
+      const transformedJobs = (jobsData as JobData[]).map(job => ({
+        id: job.id,
+        title: job.title,
+        company_id: job.company_id,
+        location: job.location,
+        company_name: job.companies?.name || 'Unknown Company',
+        tags: job.job_tag_mappings ? job.job_tag_mappings.map(mapping => mapping.job_tags.name) : []
+      }));
+
+      setJobs(transformedJobs);
+
+      // Fetch all unique tags for filtering
+      const { data: tagsData, error: tagsError } = await supabase
+        .from('job_tags')
+        .select('name')
+        .order('name');
+
+      if (tagsError) {
+        console.error('Error fetching tags:', tagsError);
+        return;
+      }
+
+      setAllTags(tagsData.map(tag => tag.name));
+    };
+
+    fetchJobs();
+  }, []);
 
   // Filter jobs based on search and selected skills
   const filteredJobs = jobs.filter((job) => {
-    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          job.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch = 
+      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const matchesSkills = selectedSkills.length === 0 || selectedSkills.every((skill) => job.tags.includes(skill));
+    const matchesSkills = selectedSkills.length === 0 || 
+      selectedSkills.every((skill) => job.tags.includes(skill));
 
     return matchesSearch && matchesSkills;
   });
@@ -106,7 +153,7 @@ export default function StudentDashboard() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {allSkills.map((skill) => (
+              {allTags.map((skill) => (
                 <button
                   key={skill}
                   onClick={() => toggleSkill(skill)}
@@ -125,9 +172,6 @@ export default function StudentDashboard() {
 
           {/* Job Postings Section */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 relative backdrop-blur-xl bg-white/50">
-            <div className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm px-4 py-1 rounded-full shadow-lg">
-              Featured Projects
-            </div>
             <div className="space-y-6">
               {filteredJobs.map((job) => (
                 <div
@@ -139,7 +183,7 @@ export default function StudentDashboard() {
                       <h3 className="font-medium mb-1 group-hover:text-blue-600 transition-colors">
                         {job.title}
                       </h3>
-                      <p className="text-sm text-gray-600">{job.company}</p>
+                      <p className="text-sm text-gray-600">{job.company_name}</p>
                     </div>
                     <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full group-hover:bg-green-100 transition-colors">
                       {job.location}

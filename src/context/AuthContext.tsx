@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import LogoutDialog from '@/components/LogoutDialog';
 
 interface UserData extends User {
   role?: 'student' | 'startup';
@@ -12,7 +13,7 @@ interface UserData extends User {
 interface AuthContextType {
   user: UserData | null;
   login: (email: string, password: string) => Promise<'student' | 'startup' | undefined>;
-  logout: () => Promise<void>;
+  initiateLogout: () => void;
   loading: boolean;
 }
 
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const router = useRouter();
   const supabase = createClientComponentClient();
 
@@ -107,17 +109,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      setUser(null); // Clear user state
-      router.push('/'); // Redirect to home page
+      setUser(null);
+      setShowLogoutDialog(false);
+      router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
       throw error;
     }
   };
 
+  const initiateLogout = () => {
+    setShowLogoutDialog(true);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, initiateLogout, loading }}>
       {children}
+      <LogoutDialog
+        isOpen={showLogoutDialog}
+        onClose={() => setShowLogoutDialog(false)}
+        onConfirm={logout}
+      />
     </AuthContext.Provider>
   );
 };

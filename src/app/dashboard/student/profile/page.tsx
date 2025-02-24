@@ -8,12 +8,13 @@ import { useAuth } from '@/context/AuthContext';
 interface ProfileData {
   id: string;
   email: string;
-  role: 'student' | 'startup';
+  role: 'student';
   first_name: string;
   last_name: string;
   university: string;
   graduation_year: string;
   major: string;
+  intro: string;
   github_profile: string;
   linkedin_profile: string;
   resume: string;
@@ -26,6 +27,7 @@ interface ProfileData {
 export default function ProfilePage() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [newSkill, setNewSkill] = useState('');
   const [profileData, setProfileData] = useState<ProfileData>({
     id: '',
     email: '',
@@ -35,6 +37,7 @@ export default function ProfilePage() {
     university: '',
     graduation_year: '',
     major: '',
+    intro: '',
     github_profile: '',
     linkedin_profile: '',
     resume: '',
@@ -81,10 +84,17 @@ export default function ProfilePage() {
             university: studentData.university ?? '',
             graduation_year: studentData.graduation_year?.toString() ?? '',
             major: studentData.major ?? '',
+            intro: studentData.intro ?? '',
             github_profile: studentData.github_profile ?? '',
             linkedin_profile: studentData.linkedin_profile ?? '',
             resume: studentData.resume ?? '',
-            skills: studentData.skills ? (Array.isArray(studentData.skills) ? studentData.skills : []) : [],
+            skills: studentData.skills 
+            ? (typeof studentData.skills === 'string' 
+              ? JSON.parse(studentData.skills) 
+              : Array.isArray(studentData.skills) 
+                ? studentData.skills 
+                : [])
+            : [],
             portfolio: studentData.portfolio ?? '',
             availability: studentData.availability ?? '',
             profile_visibility: studentData.profile_visibility ?? false,
@@ -111,10 +121,13 @@ export default function ProfilePage() {
             university: profileData.university,
             graduation_year: parseInt(profileData.graduation_year),
             major: profileData.major,
+            intro: profileData.intro,
             github_profile: profileData.github_profile,
             linkedin_profile: profileData.linkedin_profile,
             resume: profileData.resume,
-            skills: profileData.skills,
+            skills: Array.isArray(profileData.skills) 
+            ? profileData.skills 
+            : JSON.parse(profileData.skills),
             portfolio: profileData.portfolio,
             availability: profileData.availability,
             profile_visibility: profileData.profile_visibility
@@ -153,47 +166,60 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const skillsArray = e.target.value.split(',').map(skill => skill.trim()).filter(Boolean);
-    setProfileData(prev => ({
-      ...prev,
-      skills: skillsArray
-    }));
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 pt-20 pb-12">
       <div className="fixed inset-0 -z-10">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
       </div>
-
+  
       <div className="max-w-6xl mx-auto px-6">
         {/* Profile Header */}
-        <div className="relative backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-8 mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-light">
-                {profileData.first_name} {profileData.last_name}
-              </h1>
-              <p className="text-gray-600 font-light">{profileData.major} Student</p>
+        <div className="relative backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-8 mb-6 border border-gray-100">
+          <div className="space-y-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-light bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+                  {profileData.first_name} {profileData.last_name}
+                </h1>
+                <p className="text-gray-600 font-light">{profileData.major} Student</p>
+              </div>
+              
+              <button
+                onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                className="px-4 py-2 text-sm font-light text-white bg-gradient-to-r from-purple-600/70 to-blue-500/70 hover:from-purple-700 hover:to-blue-600 rounded-lg transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                <PencilLine size={14} />
+                {isEditing ? 'Save Changes' : 'Edit Profile'}
+              </button>
             </div>
-            <button
-              onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-              className="px-4 py-2 text-sm font-light text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:border-gray-300 transition-all duration-300 flex items-center gap-2"
-            >
-              <PencilLine size={14} />
-              {isEditing ? 'Save' : 'Edit'}
-            </button>
+            
+            {/* Bio Section - Full Width */}
+            <div className="w-full">
+              {isEditing ? (
+                <textarea
+                  name="intro"
+                  value={profileData.intro}
+                  onChange={handleInputChange}
+                  placeholder="Write a short bio about yourself..."
+                  className="w-full px-4 py-3 bg-transparent border border-gray-200 rounded-lg focus:border-gray-400 outline-none transition-colors font-light h-32 resize-none"
+                />
+              ) : (
+                <p className="text-gray-700 font-light leading-relaxed">
+                  {profileData.intro || "No bio added yet"}
+                </p>
+              )}
+            </div>
           </div>
         </div>
-
+  
         {/* Main Content */}
         <div className="grid md:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
-            <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-light text-gray-900 mb-4">Education</h2>
+            <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all duration-300 ">
+              <h2 className="text-lg font-light text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">Education</h2>
               <div className="space-y-4">
                 <input
                   type="text"
@@ -224,13 +250,13 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-
-            <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-light text-gray-900 mb-4">Profiles</h2>
+  
+            <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all duration-300">
+              <h2 className="text-lg font-light text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">Profiles</h2>
               <div className="space-y-4">
                 <div className="relative group">
                   <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    <Github size={16} />
+                    <Github size={16} className="text-purple-500" />
                     <label className="text-sm">GitHub Profile</label>
                   </div>
                   <input
@@ -245,7 +271,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="relative group">
                   <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    <Linkedin size={16} />
+                    <Linkedin size={16} className="text-blue-500" />
                     <label className="text-sm">LinkedIn Profile</label>
                   </div>
                   <input
@@ -261,29 +287,65 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-
+  
           {/* Right Column */}
           <div className="md:col-span-2 space-y-6">
-            <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-light text-gray-900 mb-4">Skills & Experience</h2>
+            <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all duration-300">
+              <h2 className="text-lg font-light text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">Skills & Experience</h2>
               <div className="space-y-4">
                 <div className="relative group">
                   <label className="text-sm text-gray-600 mb-1 block">Skills</label>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      name="skills"
-                      value={profileData.skills.join(', ')}
-                      onChange={handleSkillsChange}
-                      placeholder="Add skills (comma-separated)"
-                      className="w-full px-3 py-2 bg-transparent border-b border-gray-200 focus:border-gray-400 outline-none transition-colors font-light"
-                    />
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        {profileData.skills.map((skill, index) => (
+                          <div
+                            key={index}
+                            className="px-3 py-1 rounded-full text-sm font-light bg-gradient-to-r from-purple-600/10 to-blue-500/10 border border-purple-100 flex items-center gap-2"
+                          >
+                            {skill}
+                            <button
+                              onClick={() => {
+                                const newSkills = [...profileData.skills];
+                                newSkills.splice(index, 1);
+                                setProfileData(prev => ({ ...prev, skills: newSkills }));
+                              }}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={newSkill}
+                          onChange={(e) => setNewSkill(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newSkill.trim()) {
+                              e.preventDefault();
+                              if (!profileData.skills.includes(newSkill.trim())) {
+                                setProfileData(prev => ({
+                                  ...prev,
+                                  skills: [...prev.skills, newSkill.trim()]
+                                }));
+                                setNewSkill('');
+                              }
+                            }
+                          }}
+                          placeholder="Type a skill and press Enter"
+                          className="w-full px-3 py-2 bg-transparent border-b border-gray-200 focus:border-gray-400 outline-none transition-colors font-light"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500">Press Enter to add a skill</p>
+                    </div>
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {profileData.skills.map((skill, index) => (
                         <span
                           key={index}
-                          className="px-4 py-1 rounded-full text-sm font-light text-gray-600 bg-gray-100/50 border border-gray-200"
+                          className="px-4 py-1 rounded-full text-sm font-light bg-gradient-to-r from-purple-600/10 to-blue-500/10 border border-purple-100"
                         >
                           {skill}
                         </span>
@@ -320,26 +382,37 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-light text-gray-900 mb-4">Preferences</h2>
-              <div className="space-y-4">
-                <div className="relative group">
-                  <label className="text-sm text-gray-600 mb-1 block">Availability</label>
-                  <select
-                    name="availability"
-                    value={profileData.availability}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="w-full px-3 py-2 bg-transparent border-b border-gray-200 focus:border-gray-400 outline-none transition-colors disabled:text-gray-600 font-light"
-                  >
-                    <option value="">Select availability</option>
-                    <option value="full-time">Full-time</option>
-                    <option value="part-time">Part-time</option>
-                    <option value="internship">Internship</option>
-                  </select>
-                </div>
+            <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all duration-300">
+              <h2 className="text-lg font-light text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">Weekly Availability</h2>
+              <div className="space-y-6">
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">Enter your weekly availability (e.g., Monday: 4-6pm, Wednesday: 11am-2pm)</p>
+                    <textarea
+                      name="availability"
+                      value={profileData.availability}
+                      onChange={handleInputChange}
+                      placeholder="Monday: 4-6pm, Wednesday: 11am-2pm..."
+                      className="w-full px-4 py-3 bg-transparent border border-gray-200 rounded-lg focus:border-gray-400 outline-none transition-colors font-light h-24 resize-none"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-gray-700 font-light leading-relaxed">
+                    {profileData.availability ? (
+                      profileData.availability.split(',').map((timeSlot, index) => (
+                        <div key={index} className="py-1">
+                          <span className="inline-block px-3 py-1 rounded-full text-sm bg-gradient-to-r from-purple-600/10 to-blue-500/10 border border-purple-100">
+                            {timeSlot.trim()}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 italic">No availability set</p>
+                    )}
+                  </div>
+                )}
 
-                <div className="flex items-center justify-between pt-4">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <div>
                     <h3 className="text-sm font-medium text-gray-900">Profile Visibility</h3>
                     <p className="text-sm text-gray-500">Make your profile visible to startups</p>
@@ -356,7 +429,7 @@ export default function ProfilePage() {
                       disabled={!isEditing}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-blue-500"></div>
                   </label>
                 </div>
               </div>

@@ -128,10 +128,20 @@ export default function CompanyDashboardPage() {
 
         <div className="max-w-6xl mx-auto relative">
           {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-medium text-gray-900 mb-2">Company Dashboard</h1>
-            <p className="text-xl text-gray-600">
-              Manage your job postings and review applications.
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center mb-6">
+              <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white text-xl font-medium">U</span>
+              </div>
+            </div>
+            <h1 className="text-4xl font-medium text-gray-900 leading-tight mb-4">
+              Welcome to your{' '}
+              <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+                Company Dashboard
+              </span>
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              Manage your job postings and review applications from talented students.
             </p>
           </div>
 

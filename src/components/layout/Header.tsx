@@ -6,18 +6,13 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, initiateLogout } = useAuth();
 
   // Define navigation links based on authentication state
   const getNavLinks = () => {
-    const baseLinks = [
-      { href: '/', label: 'Home' },
-    ];
-
-    // If user is logged in, show dashboard and profile links
+    // If user is logged in, show only dashboard and profile links
     if (user) {
       return [
-        ...baseLinks,
         { 
           href: user.role === 'student' ? '/dashboard/student' : '/dashboard/startup', 
           label: 'Dashboard' 
@@ -29,9 +24,9 @@ export default function Header() {
       ];
     }
 
-    // If user is not logged in, show login and signup links
+    // If user is not logged in, show home, login and signup links
     return [
-      ...baseLinks,
+      { href: '/', label: 'Home' },
       { href: '/login', label: 'Login' },
       { href: '/signup', label: 'SignUp' },
     ];
@@ -39,19 +34,14 @@ export default function Header() {
 
   const navLinks = getNavLinks();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
   return (
     <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center gap-2">
+          <Link 
+            href={user ? (user.role === 'student' ? '/dashboard/student' : '/dashboard/startup') : '/'} 
+            className="flex items-center gap-2"
+          >
             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
               <span className="text-white font-medium">U</span>
             </div>
@@ -73,7 +63,7 @@ export default function Header() {
             ))}
             {user && (
               <button
-                onClick={handleLogout}
+                onClick={initiateLogout}
                 className="text-sm text-gray-600 hover:text-gray-900"
               >
                 Logout

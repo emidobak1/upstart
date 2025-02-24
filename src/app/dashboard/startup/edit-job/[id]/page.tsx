@@ -4,61 +4,98 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useAuth } from '@/context/AuthContext';
+import { X } from 'lucide-react';
+
+interface JobTag {
+  id: string;
+  name: string;
+}
+
+interface JobTagMapping {
+  job_tags: {
+    id: string;
+    name: string;
+  };
+}
 
 export default function EditJobPage() {
-  const { id } = useParams(); // Get the job ID from the URL
+  const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const supabase = createClientComponentClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableTags, setAvailableTags] = useState<JobTag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     location: '',
-    employment_type: 'full-time', // Default to full-time
-    requirements: [] as string[], // Array of requirements
-    responsibilities: [] as string[], // Array of responsibilities
-    is_active: true, // Default to active
+    employment_type: 'full-time',
+    requirements: [] as string[],
+    responsibilities: [] as string[],
+    is_active: true,
   });
 
-  // Fetch job details on page load
   useEffect(() => {
-    const fetchJob = async () => {
+    const fetchData = async () => {
       if (!user?.id || !id) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        const { data, error } = await supabase
+        // Fetch job details
+        const { data: jobData, error: jobError } = await supabase
           .from('jobs')
-          .select('*')
+          .select(`
+            *,
+            job_tag_mappings (
+              job_tags (
+                id,
+                name
+              )
+            )
+          `)
           .eq('id', id)
           .eq('company_id', user.id)
           .single();
 
-        if (error) throw error;
+        if (jobError) throw jobError;
 
+        // Fetch all available tags
+        const { data: tagsData, error: tagsError } = await supabase
+          .from('job_tags')
+          .select('*')
+          .order('name');
+
+        if (tagsError) throw tagsError;
+
+        setAvailableTags(tagsData);
+        setSelectedTags(jobData.job_tag_mappings.map(
+          (mapping: JobTagMapping) => mapping.job_tags.id
+        ));
+        
         setFormData({
-          title: data.title,
-          description: data.description,
-          location: data.location,
-          employment_type: data.employment_type,
-          requirements: data.requirements || [],
-          responsibilities: data.responsibilities || [],
-          is_active: data.is_active,
+          title: jobData.title,
+          description: jobData.description,
+          location: jobData.location,
+          employment_type: jobData.employment_type,
+          requirements: jobData.requirements || [],
+          responsibilities: jobData.responsibilities || [],
+          is_active: jobData.is_active,
         });
       } catch (error) {
-        console.error('Error fetching job:', error);
+        console.error('Error fetching data:', error);
         setError('Failed to fetch job details');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJob();
+    fetchData();
   }, [id, user, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,28 +108,42 @@ export default function EditJobPage() {
         throw new Error('User not authenticated or job ID missing');
       }
 
-      // Update job posting in the database
+      // Update job posting
       const { error: updateError } = await supabase
         .from('jobs')
         .update({
-          title: formData.title,
-          description: formData.description,
-          location: formData.location,
-          employment_type: formData.employment_type,
-          requirements: formData.requirements,
-          responsibilities: formData.responsibilities,
-          is_active: formData.is_active,
+          ...formData,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', id)
         .eq('company_id', user.id);
 
       if (updateError) throw updateError;
 
-      // Redirect to the startup dashboard or job listings page
+      // Delete existing tag mappings
+      await supabase
+        .from('job_tag_mappings')
+        .delete()
+        .eq('job_id', id);
+
+      // Create new tag mappings
+      if (selectedTags.length > 0) {
+        const mappings = selectedTags.map(tagId => ({
+          job_id: id,
+          tag_id: tagId,
+        }));
+
+        const { error: mappingError } = await supabase
+          .from('job_tag_mappings')
+          .insert(mappings);
+
+        if (mappingError) throw mappingError;
+      }
+
       router.push('/dashboard/startup');
     } catch (error) {
       console.error('Error updating job:', error);
-      setError(error instanceof Error ? error.message : 'An error occurred while updating the job');
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -112,153 +163,235 @@ export default function EditJobPage() {
     e: React.ChangeEvent<HTMLTextAreaElement>,
     field: 'requirements' | 'responsibilities'
   ) => {
-    const values = e.target.value.split('\n').filter(Boolean); // Split by newline and remove empty lines
+    const values = e.target.value.split('\n').filter(Boolean);
     setFormData(prev => ({
       ...prev,
       [field]: values,
     }));
   };
 
+  const toggleTag = (tagId: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tagId)
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
+  const handleAddNewTag = async () => {
+    if (!newTag.trim()) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('job_tags')
+        .insert({ name: newTag.trim() })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setAvailableTags(prev => [...prev, data]);
+      setSelectedTags(prev => [...prev, data.id]);
+      setNewTag('');
+    } catch (error) {
+      console.error('Error adding new tag:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pt-20 pb-12">
-      {/* Background Blobs */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
       </div>
 
       <div className="max-w-4xl mx-auto px-6">
-        {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-light text-gray-900 mb-2">Edit Job Posting</h1>
+          <h1 className="text-3xl font-light mb-2">
+            <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+              Edit Job Posting
+            </span>
+          </h1>
           <p className="text-gray-600 font-light">
             Update the job posting details below.
           </p>
         </div>
 
-        {/* Job Posting Form */}
-        <form onSubmit={handleSubmit} className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-8">
-          <div className="space-y-6">
-            {/* Job Title */}
-            <div className="relative group">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                required
-                placeholder="Enter job title"
-                className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-colors"
-              />
-            </div>
-
-            {/* Job Description */}
-            <div className="relative group">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                placeholder="Enter job description"
-                className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-colors"
-                rows={6}
-              />
-            </div>
-
-            {/* Location */}
-            <div className="relative group">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                required
-                placeholder="Enter job location"
-                className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-colors"
-              />
-            </div>
-
-            {/* Employment Type */}
-            <div className="relative group">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
-              <select
-                name="employment_type"
-                value={formData.employment_type}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-colors"
-              >
-                <option value="full-time">Full-time</option>
-                <option value="part-time">Part-time</option>
-                <option value="internship">Internship</option>
-                <option value="contract">Contract</option>
-              </select>
-            </div>
-
-            {/* Requirements */}
-            <div className="relative group">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
-              <textarea
-                name="requirements"
-                value={formData.requirements.join('\n')}
-                onChange={(e) => handleArrayChange(e, 'requirements')}
-                placeholder="Enter requirements (one per line)"
-                className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-colors"
-                rows={4}
-              />
-            </div>
-
-            {/* Responsibilities */}
-            <div className="relative group">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Responsibilities</label>
-              <textarea
-                name="responsibilities"
-                value={formData.responsibilities.join('\n')}
-                onChange={(e) => handleArrayChange(e, 'responsibilities')}
-                placeholder="Enter responsibilities (one per line)"
-                className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-colors"
-                rows={4}
-              />
-            </div>
-
-            {/* Active Status */}
-            <div className="relative group">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Active Status</label>
-              <select
-                name="is_active"
-                value={formData.is_active ? 'true' : 'false'}
-                onChange={(e) =>
-                  setFormData(prev => ({
-                    ...prev,
-                    is_active: e.target.value === 'true',
-                  }))
-                }
-                required
-                className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-colors"
-              >
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-                {error}
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Main Details Section */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div className="space-y-6">
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors"
+                />
               </div>
-            )}
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Updating Job...' : 'Update Job'}
-            </button>
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  required
+                  rows={6}
+                  className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="relative group">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="relative group">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
+                  <select
+                    name="employment_type"
+                    value={formData.employment_type}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors"
+                  >
+                    <option value="full-time">Full-time</option>
+                    <option value="part-time">Part-time</option>
+                    <option value="internship">Internship</option>
+                    <option value="contract">Contract</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tags Section */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-8 border border-gray-100">
+            <h2 className="text-xl font-light mb-4 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+              Job Tags
+            </h2>
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => toggleTag(tag.id)}
+                    className={`px-4 py-2 rounded-full text-sm flex items-center gap-2 transition-all duration-300 ${
+                      selectedTags.includes(tag.id)
+                        ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {tag.name}
+                    {selectedTags.includes(tag.id) && <X size={14} />}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="Add a new tag"
+                  className="flex-1 px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddNewTag();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddNewTag}
+                  className="px-4 py-2 text-white bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg hover:from-purple-700 hover:to-blue-600 transition-all duration-300"
+                >
+                  Add Tag
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Requirements & Responsibilities Section */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div className="space-y-6">
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+                <textarea
+                  name="requirements"
+                  value={formData.requirements.join('\n')}
+                  onChange={(e) => handleArrayChange(e, 'requirements')}
+                  rows={4}
+                  className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors"
+                  placeholder="Enter each requirement on a new line"
+                />
+              </div>
+
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Responsibilities</label>
+                <textarea
+                  name="responsibilities"
+                  value={formData.responsibilities.join('\n')}
+                  onChange={(e) => handleArrayChange(e, 'responsibilities')}
+                  rows={4}
+                  className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors"
+                  placeholder="Enter each responsibility on a new line"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Status & Submit Section */}
+          <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div className="space-y-6">
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Active Status</label>
+                <select
+                  name="is_active"
+                  value={formData.is_active ? 'true' : 'false'}
+                  onChange={(e) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      is_active: e.target.value === 'true',
+                    }))
+                  }
+                  required
+                  className="w-full px-4 py-2 bg-transparent border border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors"
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-4 rounded-lg">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-6 py-3 text-white bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg hover:from-purple-700 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+              >
+                {loading ? 'Updating Job...' : 'Update Job'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

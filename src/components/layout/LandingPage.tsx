@@ -1,4 +1,5 @@
 import { ArrowRight, Users, Star, ChevronRight, Globe } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LandingPage() {
   return (
@@ -31,14 +32,20 @@ export default function LandingPage() {
                 and build an impressive portfolio that sets you apart.
               </p>
               <div className="flex items-center gap-4">
-                <button className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition-all duration-300 flex items-center group shadow-lg hover:shadow-xl">
+                <Link 
+                  href="/signup"
+                  className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition-all duration-300 flex items-center group shadow-lg hover:shadow-xl"
+                >
                   Get Started
                   <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                </button>
-                <button className="text-gray-600 hover:text-gray-900 flex items-center group">
+                </Link>
+                <Link 
+                  href="/how-it-works"
+                  className="text-gray-600 hover:text-gray-900 flex items-center group"
+                >
                   How it works
                   <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                </button>
+                </Link>
               </div>
             </div>
             <div className="bg-white rounded-2xl shadow-2xl p-8 relative backdrop-blur-xl bg-white/50">

@@ -28,6 +28,9 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [newSkill, setNewSkill] = useState('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<ProfileData>({
     id: '',
     email: '',
@@ -163,6 +166,69 @@ export default function ProfilePage() {
         ...prev,
         [name]: value
       }));
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      // Check if file is a PDF
+      if (file.type !== 'application/pdf') {
+        setUploadError('Please upload a PDF file');
+        return;
+      }
+      
+      setResumeFile(file);
+      setUploadError(null);
+    }
+  };
+  
+  const handleUploadResume = async () => {
+    if (!resumeFile || !user?.id) return;
+    
+    setUploading(true);
+    setUploadError(null);
+    
+    try {
+      const supabase = createClientComponentClient();
+      
+      // Create a unique file path for the user's resume
+      const fileExt = resumeFile.name.split('.').pop();
+      const fileName = `resume_${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('resume')
+        .upload(filePath, resumeFile);
+      
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL for the uploaded file
+      const { data } = supabase.storage
+        .from('resume')
+        .getPublicUrl(filePath);
+      
+      // Update the resume URL in the students table
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({ resume: data.publicUrl })
+        .eq('id', user.id);
+      
+      if (updateError) throw updateError;
+      
+      // Update local state
+      setProfileData({
+        ...profileData,
+        resume: data.publicUrl
+      });
+      
+      setResumeFile(null);
+    } catch (error) {
+      console.error('Error uploading resume:', error);
+      setUploadError(error instanceof Error ? error.message : 'Failed to upload resume');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -369,15 +435,70 @@ export default function ProfilePage() {
 
                 <div className="relative group">
                   <label className="text-sm text-gray-600 mb-1 block">Resume</label>
-                  <input
-                    type="url"
-                    name="resume"
-                    value={profileData.resume}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Link to your resume"
-                    className="w-full px-3 py-2 bg-transparent border-b border-gray-200 focus:border-gray-400 outline-none transition-colors disabled:text-gray-600 font-light"
-                  />
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      {profileData.resume && (
+                        <div className="flex items-center gap-2">
+                          <a 
+                            href={profileData.resume} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline flex items-center gap-1 text-sm"
+                          >
+                            Current Resume PDF
+                          </a>
+                        </div>
+                      )}
+                      
+                      <div className="border border-dashed border-gray-300 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <input
+                          type="file"
+                          id="resume-upload"
+                          accept=".pdf"
+                          className="hidden"
+                          onChange={handleFileChange}
+                        />
+                        <label 
+                          htmlFor="resume-upload"
+                          className="flex flex-col items-center justify-center cursor-pointer"
+                        >
+                          <span className="text-sm text-gray-600">
+                            {resumeFile ? resumeFile.name : 'Click to upload PDF resume'}
+                          </span>
+                        </label>
+                      </div>
+                      
+                      {resumeFile && (
+                        <button
+                          type="button"
+                          onClick={handleUploadResume}
+                          disabled={uploading}
+                          className="px-4 py-2 text-sm text-white bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg transition-all duration-300 disabled:opacity-50"
+                        >
+                          {uploading ? 'Uploading...' : 'Upload Resume'}
+                        </button>
+                      )}
+                      
+                      {uploadError && (
+                        <p className="text-sm text-red-600">{uploadError}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      {profileData.resume ? (
+                        <a 
+                          href={profileData.resume} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline flex items-center gap-1"
+                        >
+                          View Resume
+                        </a>
+                      ) : (
+                        <p className="text-gray-500 italic">No resume uploaded</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

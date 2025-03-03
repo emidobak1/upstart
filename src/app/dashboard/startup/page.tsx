@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useAuth } from '@/context/AuthContext';
-import { Pencil, Plus, Users, FileText, ChevronRight, Eye, Calendar, MapPin, Clock } from 'lucide-react';
-import Link from 'next/link';
+import { Pencil, Plus, Users, FileText, ChevronRight, Calendar, MapPin, Clock } from 'lucide-react';
 
 interface JobPosting {
   id: string;
@@ -528,13 +527,6 @@ export default function CompanyDashboardPage() {
                             </a>
                           )}
                           
-                          <button
-                            onClick={() => viewStudentProfile(application.student?.id)}
-                            className="px-4 py-2 text-sm font-light text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition-all duration-300 flex items-center gap-1"
-                          >
-                            <Eye size={14} />
-                            View Full Profile
-                          </button>
                         </div>
                       </div>
                       

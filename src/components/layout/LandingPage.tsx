@@ -1,5 +1,5 @@
 'use client'
-import { ArrowRight, Users, ChevronRight, Code, Sparkles, MousePointer } from 'lucide-react';
+import { ArrowRight, Users, Code, Sparkles, MousePointer } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 

@@ -5,15 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useAuth } from '@/context/AuthContext';
 import { 
-  ArrowLeft, FileText, Github, Linkedin, Mail, 
-  MapPin, Calendar, GraduationCap, ExternalLink, Clock
+  ArrowLeft, FileText, Github, Linkedin, 
+  Calendar, GraduationCap, ExternalLink, Clock
 } from 'lucide-react';
 
 interface StudentProfile {
   id: string;
   first_name: string;
   last_name: string;
-  email: string;
   university: string;
   major: string;
   graduation_year: string;
@@ -31,6 +30,15 @@ interface Application {
   job_id: string;
   job_title: string;
   created_at: string;
+}
+
+interface ApplicationData {
+  id: string;
+  job_id: string;
+  created_at: string;
+  jobs: {
+    title?: string;
+  } | Array<{title?: string}>;
 }
 
 export default function StudentProfileView() {
@@ -66,6 +74,7 @@ export default function StudentProfileView() {
         if (typeof user.id !== 'string' || user.id.trim() === '') {
           throw new Error(`Invalid user ID: ${user.id}`);
         }
+        
         try {
           // First, check if this company has received applications from this student
           const { data: applicationsData, error: applicationsError } = await supabase
@@ -97,7 +106,7 @@ export default function StudentProfileView() {
           console.log('Found applications:', applicationsData.length);
           
           // Format applications data
-          const formattedApplications = applicationsData.map((app: any) => {
+          const formattedApplications = applicationsData.map((app: ApplicationData) => {
             try {
               const jobData = Array.isArray(app.jobs) ? app.jobs[0] || {} : app.jobs || {};
               
@@ -124,30 +133,6 @@ export default function StudentProfileView() {
           throw new Error(`Failed to fetch application data: ${appError instanceof Error ? appError.message : 'Unknown error'}`);
         }
         
-        // Format applications data
-        const formattedApplications = applicationsData.map(app => {
-          try {
-            const jobData = Array.isArray(app.jobs) ? app.jobs[0] || {} : app.jobs || {};
-            
-            return {
-              id: app.id,
-              job_id: app.job_id,
-              job_title: jobData.title || 'Unknown Job',
-              created_at: app.created_at
-            };
-          } catch (formatError) {
-            console.error('Error formatting application:', formatError, app);
-            return {
-              id: app.id || 'unknown',
-              job_id: app.job_id || 'unknown',
-              job_title: 'Error: Unable to get job title',
-              created_at: app.created_at || new Date().toISOString()
-            };
-          }
-        });
-        
-        setApplications(formattedApplications);
-        
         try {
           // Fetch student profile data
           console.log('Fetching student data for ID:', id);
@@ -157,7 +142,6 @@ export default function StudentProfileView() {
               id,
               first_name,
               last_name,
-              email,
               university,
               major,
               graduation_year,
@@ -197,7 +181,7 @@ export default function StudentProfileView() {
         // Log the full error object with a safer approach
         try {
           console.log('Error details:', error instanceof Error ? error.message : JSON.stringify(error));
-        } catch (jsonError) {
+        } catch (error) {
           console.log('Error could not be stringified:', error);
         }
         setError(error instanceof Error ? error.message : 'Failed to load student profile. Please try again.');
@@ -306,15 +290,6 @@ export default function StudentProfileView() {
                 <p className="text-gray-600">{student.major || 'Student'}</p>
                 
                 <div className="flex flex-wrap gap-3 mt-2">
-                  {student.email && (
-                    <a 
-                      href={`mailto:${student.email}`} 
-                      className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 gap-1"
-                    >
-                      <Mail size={14} />
-                      <span>Email</span>
-                    </a>
-                  )}
                   {student.resume && (
                     <a 
                       href={student.resume} 
@@ -462,7 +437,7 @@ export default function StudentProfileView() {
                   <span className="group-hover:underline">{student.portfolio}</span>
                 </a>
                 <p className="text-sm text-gray-600 mt-2">
-                  View this student's portfolio to see examples of their work and projects.
+                  View this student&apos;s portfolio to see examples of their work and projects.
                 </p>
               </div>
             )}

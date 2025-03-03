@@ -1,9 +1,67 @@
-import { ArrowRight, Users, Star, ChevronRight, Globe } from 'lucide-react';
+'use client'
+import { ArrowRight, Users, Code, Sparkles, MousePointer } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function LandingPage() {
+  // State for interactive feature hover
+  const [activeFeature, setActiveFeature] = useState<number | null>(null);
+
+  // Sample featured internship opportunities
+  const featuredInternships = [
+    {
+      title: "UI/UX Design Intern",
+      company: "DesignMind Studio",
+      location: "Remote",
+      tags: ["Figma", "UI/UX", "Prototyping"],
+      isHot: true
+    },
+    {
+      title: "Frontend Developer Intern",
+      company: "TechFlow AI",
+      location: "Hybrid",
+      tags: ["React", "TypeScript", "Tailwind"],
+      isNew: true
+    },
+    {
+      title: "Data Science Intern",
+      company: "DataVerse Analytics",
+      location: "Remote",
+      tags: ["Python", "ML", "Data Analysis"],
+      isFeatured: true
+    }
+  ];
+
+  // Interactive features with animations
+  const features = [
+    {
+      id: 1,
+      icon: Code,
+      title: "Real-World Projects",
+      description: "Work on actual projects that make meaningful impact at innovative startups",
+      color: "from-blue-500 to-cyan-400",
+      hoverEffect: "scale-105 shadow-blue-300/50"
+    },
+    {
+      id: 2,
+      icon: Users,
+      title: "Direct Mentorship",
+      description: "Connect and collaborate directly with startup founders and team leads",
+      color: "from-purple-500 to-pink-400",
+      hoverEffect: "scale-105 shadow-purple-300/50"
+    },
+    {
+      id: 3,
+      icon: Sparkles,
+      title: "Build Your Portfolio",
+      description: "Create an impressive portfolio with real startup projects that stands out to employers",
+      color: "from-amber-500 to-orange-400",
+      hoverEffect: "scale-105 shadow-amber-300/50"
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Hero Section with animated gradient background */}
       <div className="relative pt-32 px-6 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white">
@@ -33,38 +91,51 @@ export default function LandingPage() {
               </p>
               <div className="flex items-center gap-4">
                 <Link 
-                  href="/signup"
-                  className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition-all duration-300 flex items-center group shadow-lg hover:shadow-xl"
-                >
-                  Get Started
-                  <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                </Link>
-                <Link 
                   href="/how-it-works"
-                  className="text-gray-600 hover:text-gray-900 flex items-center group"
+                  className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition-all duration-300 flex items-center group shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                 >
                   How it works
                   <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                 </Link>
               </div>
             </div>
-            <div className="bg-white rounded-2xl shadow-2xl p-8 relative backdrop-blur-xl bg-white/50">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 relative backdrop-blur-xl bg-white/50 transform transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
               <div className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm px-4 py-1 rounded-full shadow-lg">
-                Featured Projects
+                Featured Internships
               </div>
               <div className="space-y-6">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="border border-gray-100 p-4 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white">
+                {featuredInternships.map((internship, index) => (
+                  <div 
+                    key={index} 
+                    className="border border-gray-100 p-4 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white transform hover:-translate-y-1"
+                  >
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h3 className="font-medium mb-1 group-hover:text-blue-600 transition-colors">Frontend Developer</h3>
-                        <p className="text-sm text-gray-600">TechStart AI</p>
+                        <div className="flex items-center">
+                          <h3 className="font-medium mb-1 group-hover:text-blue-600 transition-colors">{internship.title}</h3>
+                          {internship.isHot && (
+                            <span className="ml-2 bg-red-50 text-red-600 text-xs px-2 py-0.5 rounded-full">Hot</span>
+                          )}
+                          {internship.isNew && (
+                            <span className="ml-2 bg-green-50 text-green-600 text-xs px-2 py-0.5 rounded-full">New</span>
+                          )}
+                          {internship.isFeatured && (
+                            <span className="ml-2 bg-purple-50 text-purple-600 text-xs px-2 py-0.5 rounded-full">Featured</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">{internship.company}</p>
                       </div>
-                      <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full group-hover:bg-green-100 transition-colors">Remote</span>
+                      <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full group-hover:bg-green-100 transition-colors">{internship.location}</span>
                     </div>
                     <div className="flex gap-2">
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded-full group-hover:bg-gray-200 transition-colors">React</span>
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded-full group-hover:bg-gray-200 transition-colors">UI/UX</span>
+                      {internship.tags.map((tag, tagIndex) => (
+                        <span 
+                          key={tagIndex} 
+                          className="text-xs bg-gray-100 px-2 py-1 rounded-full group-hover:bg-gray-200 transition-colors"
+                        >
+                          {tag}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -83,8 +154,8 @@ export default function LandingPage() {
               { number: '200+', label: 'Startup Partners', color: 'from-purple-500' },
               { number: '1,000+', label: 'Students Matched', color: 'from-pink-500' }
             ].map((stat, index) => (
-              <div key={index} className="group hover:transform hover:scale-105 transition-all duration-300">
-                <div className={`text-4xl font-medium bg-gradient-to-r ${stat.color} to-gray-900 bg-clip-text text-transparent mb-2`}>
+              <div key={index} className="group hover:transform hover:scale-105 transition-all duration-500 p-8 bg-white rounded-xl hover:shadow-xl">
+                <div className={`text-5xl font-medium bg-gradient-to-r ${stat.color} to-gray-900 bg-clip-text text-transparent mb-3 transform transition-all duration-500 group-hover:scale-110`}>
                   {stat.number}
                 </div>
                 <div className="text-gray-600 group-hover:text-gray-900 transition-colors">{stat.label}</div>
@@ -94,7 +165,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Features Section */}
+      {/* Revamped Interactive Features Section */}
       <div className="py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
@@ -103,38 +174,77 @@ export default function LandingPage() {
         
         <div className="max-w-6xl mx-auto px-6 relative">
           <div className="text-center mb-16">
-            <span className="text-sm text-gray-600 bg-blue-50/50 px-4 py-2 rounded-full">
+            <span className="text-sm bg-gradient-to-r from-purple-600 to-blue-500 text-white px-4 py-2 rounded-full animate-pulse">
               Why Choose Upstart
             </span>
-            <h2 className="mt-6 text-3xl text-gray-800">
+            <h2 className="mt-8 text-4xl font-medium text-gray-800">
               The platform built for your success
             </h2>
             <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-              We have simplified the process of finding and securing meaningful startup experience
+              We&apos;ve simplified the process of finding and securing meaningful startup experience
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { icon: Globe, title: 'Real Projects', description: 'Work on actual projects that make real impact at growing startups' },
-              { icon: Users, title: 'Direct Connection', description: 'Connect and work directly with startup founders and team leads' },
-              { icon: Star, title: 'Build Portfolio', description: 'Create an impressive portfolio with real startup projects' }
-            ].map((feature, index) => (
+            {features.map((feature) => (
               <div 
-                key={index} 
-                className="relative group bg-white/70 backdrop-blur-sm p-8 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+                key={feature.id} 
+                className={`relative overflow-hidden bg-white p-8 rounded-xl shadow-sm transition-all duration-500 transform ${activeFeature === feature.id ? feature.hoverEffect : ''} hover:shadow-lg`}
+                onMouseEnter={() => setActiveFeature(feature.id)}
+                onMouseLeave={() => setActiveFeature(null)}
               >
-                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
-                  <feature.icon className="text-blue-700/70" size={20} />
+                <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-gradient-to-r opacity-10 rounded-full"></div>
+                
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 bg-gradient-to-r ${feature.color} transform ${activeFeature === feature.id ? 'scale-110 rotate-6' : ''}`}>
+                  <feature.icon className="text-white" size={28} />
                 </div>
-                <h3 className="text-lg text-gray-800 mb-3">
+                
+                <h3 className="text-xl font-medium text-gray-800 mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
+                
+                <p className="text-gray-600 leading-relaxed">
                   {feature.description}
                 </p>
+                
+                <div className={`mt-6 flex items-center text-sm font-medium bg-gradient-to-r ${feature.color} bg-clip-text text-transparent transition-all duration-300 ${activeFeature === feature.id ? 'translate-x-2' : ''}`}>
+                  <span>Learn more</span>
+                  <ArrowRight size={14} className="ml-1" />
+                </div>
               </div>
             ))}
+          </div>
+          
+          {/* Interactive call-to-action */}
+          <div className="mt-20 bg-white border-2 border-gradient-to-r from-purple-600 to-blue-500 rounded-2xl overflow-hidden shadow-xl relative">
+            <div className="absolute inset-0 rounded-2xl overflow-hidden" style={{ margin: '-2px' }}>
+              <div className="absolute inset-0 bg-white opacity-30"></div>
+            </div>
+            <div className="relative p-12 text-center">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 left-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-overlay filter blur-3xl animate-blob"></div>
+                <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-2000"></div>
+              </div>
+              
+              <h3 className="text-3xl font-medium text-gray-800 mb-4 relative">
+                Ready to jumpstart your career?
+              </h3>
+              
+              <p className="text-gray-600 max-w-xl mx-auto mb-8 relative">
+                Join hundreds of students who have accelerated their careers through real-world startup experience.
+              </p>
+              
+              <div className="relative inline-block group">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg blur opacity-20 transition-all duration-300 group-hover:opacity-40 group-hover:blur-md"></div>
+                <Link 
+                  href="/signup" 
+                  className="relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-lg font-medium transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1"
+                >
+                  <span>Get Started Now</span>
+                  <MousePointer className="ml-2 animate-bounce" size={16} />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>

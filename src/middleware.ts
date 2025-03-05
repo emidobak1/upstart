@@ -9,24 +9,33 @@ export async function middleware(request: NextRequest) {
   // Refresh session if expired
   const { data: { session } } = await supabase.auth.getSession();
 
+  const path = request.nextUrl.pathname;
+
   // If user is not logged in and trying to access protected route
-  if (!session && request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (!session) {
+    if (path.startsWith('/student') || path.startsWith('/startup')) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  const userRole = session.user.user_metadata?.role;
+
+  // If user is logged in and trying to access login/signup
+  if (session && (path === '/login' || path === '/signup')) {
+    if (userRole === 'student') {
+      return NextResponse.redirect(new URL('/student/dashboard', request.url));
+    } else if (userRole === 'startup') {
+      return NextResponse.redirect(new URL('/startup/dashboard', request.url));
+    }
+  }
+
+  if (path.startsWith('/student') && userRole !== 'student') {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // If user is logged in and trying to access login/signup
-  if (session && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
-    const { data } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-
-    if (data?.role === 'student') {
-      return NextResponse.redirect(new URL('/dashboard/student', request.url));
-    } else if (data?.role === 'startup') {
-      return NextResponse.redirect(new URL('/dashboard/startup', request.url));
-    }
+  if (path.startsWith('/startup') && userRole !== 'startup') {
+    return NextResponse.redirect(new URL('/login', request.url)); 
   }
 
   return res;

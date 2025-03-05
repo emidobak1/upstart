@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Lock } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { GoogleAuthButton, LinkedInAuthButton, MicrosoftAuthButton } from '@/components/auth/AuthButtons';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const supabase = createClientComponentClient();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,15 +23,19 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      const role = await login(formData.email, formData.password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
       
-      if (!role) {
-        throw new Error('Failed to get user role');
-      }
+      if (error) throw new Error(error.message);
 
-      if (role === 'student' || role === 'startup') {
-        router.replace(`/dashboard/${role}`);
-      }
+      const userId = data.session.user.id;
+      const userRole = data.session.user.user_metadata.role;
+      
+      if (!userId || !userRole) throw new Error('Error accessing user data');
+
+      router.push(userRole === 'student' ? '/student/dashboard' : '/startup/dashboard');
     } catch (error) {
       console.error('Login error:', error);
       setError(error instanceof Error ? error.message : 'Failed to login');
@@ -38,6 +43,26 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  const loginWithOAuth = async (provider: 'google' | 'linkedin' | 'azure') => {
+    try {
+      setIsLoading(true);
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: `${window.location.origin}/callback`,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+
+    } catch (error) {
+      console.error('OAuth Sign-In error:', error);
+      setError('An error occurred during OAuth sign-in');
+      setIsLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -138,6 +163,29 @@ export default function LoginPage() {
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </button>
           </form>
+
+          {/* OAuth Buttons */}
+          <div className='flex flex-col items-center gap-4 pt-4'>
+            {/*<h2 className='text-md font-medium mb-3'>OR</h2>*/}
+            <button 
+              onClick={() => loginWithOAuth('google')}
+              className='w-full'  
+            >
+              <GoogleAuthButton text='Login'/>
+            </button>
+            <button 
+              onClick={() => loginWithOAuth('linkedin')}
+              className='w-full'  
+            >
+              <LinkedInAuthButton text='Login'/>
+            </button>
+            <button 
+              onClick={() => loginWithOAuth('azure')}
+              className='w-full'  
+            >
+              <MicrosoftAuthButton text='Login'/>
+            </button>
+          </div>
         </div>
       </div>
 

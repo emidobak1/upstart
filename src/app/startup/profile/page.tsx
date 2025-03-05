@@ -151,7 +151,7 @@ export default function StartupProfilePage() {
         <div className="mb-8">
           <button
             onClick={() => {
-                router.push('/dashboard/startup/post-job');
+                router.push('/startup/post-job');
                 console.log('Redirect to job posting page');
             }}
             className="w-36 px-6 py-3 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-300 text-center"

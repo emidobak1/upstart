@@ -175,7 +175,7 @@ export default function JobDetails() {
       
       // Wait 2 seconds before redirecting to show success message
       setTimeout(() => {
-        router.push('/dashboard/student');
+        router.push('/student/dashboard');
       }, 2000);
       
     } catch (error) {

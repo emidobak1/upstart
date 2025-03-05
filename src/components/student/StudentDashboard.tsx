@@ -203,7 +203,7 @@ export default function StudentDashboard() {
 
   // View job details
   const viewJobDetails = (jobId: string) => {
-    router.push(`/dashboard/student/jobs/${jobId}`);
+    router.push(`/student/jobs/${jobId}`);
   };
 
   return (

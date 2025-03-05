@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Backpack, Building2 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { GoogleAuthButton, LinkedInAuthButton, MicrosoftAuthButton } from '@/components/auth/AuthButtons';
 
 export default function SignUp() {
   const router = useRouter();
-  const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const supabase = createClientComponentClient();
@@ -29,10 +28,10 @@ export default function SignUp() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-  
+
     try {
-      // First create the auth user
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      // 1. Signup a new user if they dont already exist
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -41,45 +40,81 @@ export default function SignUp() {
           }
         }
       });
-  
-      if (signUpError) throw signUpError;
-  
-      if (authData.user) {
-        // Create the user record first
-        const { error: userError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: authData.user.id,
-              role: formData.role,
-            }
-          ]);
-  
-        if (userError) throw userError;
-  
-        // If it's a student, UPDATE (not insert) the students record
-        if (formData.role === 'student') {
-          const { error: studentError } = await supabase
-            .from('students')
-            .update({  // Use update instead of insert
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              university: formData.school
-            })
-            .eq('id', authData.user.id);  // Match on the id
-  
-          if (studentError) throw studentError;
-        }
-  
-        await login(formData.email, formData.password);
-        router.push(formData.role === 'student' ? '/dashboard/student' : '/dashboard/startup');
+      
+      if (error && error.message.includes('already registered')) {
+        throw new Error('User already exists with this email');
       }
+      
+      if (error) {
+        throw error;
+      }
+
+      const userId = data?.user?.id;
+      const userRole = data?.user?.user_metadata?.role;
+
+      if (!userId || !userRole) {
+        throw new Error('User creation failed');
+      }
+
+      // 2. Insert student or startup record in respective tables
+      if (userRole === 'student') {
+        await createStudentRecord(userId);
+      } else {
+        await createStartupRecord(userId);
+      }
+
+      // 3. Route to signup step 2
+      console.log("ROUTE TO ADD INFO")
+      router.push(userRole === 'student' ? '/student/profile' : '/startup/profile');
+      
     } catch (error) {
       console.error('Signup error:', error);
       setError(error instanceof Error ? error.message : 'An error occurred during signup');
     } finally {
       setLoading(false);
     }
+  };
+
+  const signInWithOAuth = async (provider: 'google' | 'linkedin' | 'azure') => {
+    try {
+      setLoading(true);
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: `${window.location.origin}/callback?role=${formData.role}`,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+
+    } catch (error) {
+      console.error('OAuth Sign-In error:', error);
+      setError('An error occurred during OAuth sign-in');
+      setLoading(false);
+    }
+  }
+
+  // Function to create student record
+  const createStudentRecord = async (userId: string) => {
+    const { error } = await supabase
+      .from('students')
+      .insert({
+        id: userId,
+      });
+  
+    if (error) throw error;
+  };
+
+  // Function to create startup record
+  const createStartupRecord = async (userId: string) => {
+    const { error } = await supabase
+      .from('companies')
+      .insert({
+        id: userId,
+      });
+  
+    if (error) throw error;
   };
 
   const renderStudentFields = () => (
@@ -235,7 +270,7 @@ export default function SignUp() {
               </div>
 
               {/* Render role-specific fields */}
-              {formData.role === 'student' ? renderStudentFields() : renderStartupFields()}
+              {/*formData.role === 'student' ? renderStudentFields() : renderStartupFields()*/}
             </div>
 
             {error && (
@@ -249,10 +284,37 @@ export default function SignUp() {
               disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-light text-white bg-gradient-to-r from-purple-600/70 to-blue-500/70 hover:from-purple-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 
+                'Creating Account...' : 
+                formData.role === 'student' ? 
+                  'Create Student Account' : 'Create Company Account'
+              }
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </button>
           </form>
+
+          {/* OAuth Buttons */}
+          <div className='flex flex-col items-center gap-4 pt-4'>
+            {/*<h2 className='text-md font-medium mb-3'>OR</h2>*/}
+            <button 
+              onClick={() => signInWithOAuth('google')}
+              className='w-full'  
+            >
+              <GoogleAuthButton text='Sign Up'/>
+            </button>
+            <button 
+              onClick={() => signInWithOAuth('linkedin')}
+              className='w-full'  
+            >
+              <LinkedInAuthButton text='Sign Up'/>
+            </button>
+            <button 
+              onClick={() => signInWithOAuth('azure')}
+              className='w-full'  
+            >
+              <MicrosoftAuthButton text='Sign Up'/>
+            </button>
+          </div>
         </div>
       </div>
 

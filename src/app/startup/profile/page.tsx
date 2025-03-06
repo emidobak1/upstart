@@ -36,18 +36,7 @@ export default function StartupProfilePage() {
       if (user?.id) {
         const supabase = createClientComponentClient();
 
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        if (userError) {
-          console.error('Error fetching user data:', userError);
-          return;
-        }
-
-        if (userData.role === 'startup') {
+        if (user.role === 'startup') {
           const { data: companyData, error: companyError } = await supabase
             .from('companies')
             .select('*')
@@ -62,7 +51,7 @@ export default function StartupProfilePage() {
           setProfileData({
             id: user.id,
             email: user.email ?? '',
-            role: userData.role,
+            role: user.role,
             name: companyData.name ?? '',
             description: companyData.description ?? '',
             website_url: companyData.website_url ?? '',

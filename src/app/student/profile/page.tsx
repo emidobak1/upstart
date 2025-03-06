@@ -55,18 +55,7 @@ export default function ProfilePage() {
       if (user?.id) {
         const supabase = createClientComponentClient();
 
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        if (userError) {
-          console.error('Error fetching user data:', userError);
-          return;
-        }
-
-        if (userData.role === 'student') {
+        if (user.role === 'student') {
           const { data: studentData, error: studentError } = await supabase
             .from('students')
             .select('*')
@@ -81,7 +70,7 @@ export default function ProfilePage() {
           setProfileData({
             id: user.id,
             email: user.email ?? '',
-            role: userData.role,
+            role: user.role,
             first_name: studentData.first_name ?? '',
             last_name: studentData.last_name ?? '',
             university: studentData.university ?? '',

@@ -317,7 +317,7 @@ export default function CompanyDashboardPage() {
               className={`px-6 py-2 text-sm font-light rounded-lg transition-all duration-300 flex items-center gap-2 ${
                 activeTab === 'applications'
                   ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-black border border-gray-300 hover:border-gray-300'
+                  : 'text-gray-600 hover:text-black border border-gray-300 hover:border-gray-400'
               }`}
             >
               <Users size={16} />

@@ -32,10 +32,17 @@ export default function LoginPage() {
 
       const userId = data.session.user.id;
       const userRole = data.session.user.user_metadata.role;
+      const onboardingStatus = data.session.user.user_metadata.onboarding_status;
       
       if (!userId || !userRole) throw new Error('Error accessing user data');
 
-      router.push(userRole === 'student' ? '/student/dashboard' : '/startup/dashboard');
+      // Redirect to onboarding if onboarding status is not started
+      if (onboardingStatus === 'not_started') {
+        router.push('/onboarding');
+      } else {
+        // Otherwise, redirect to the dashboard based on the user role
+        router.push(userRole === 'student' ? '/student/dashboard' : '/startup/dashboard');
+      }
     } catch (error) {
       console.error('Login error:', error);
       setError(error instanceof Error ? error.message : 'Failed to login');

@@ -36,7 +36,8 @@ export default function SignUp() {
         password: formData.password,
         options: {
           data: {
-            role: formData.role
+            role: formData.role,
+            onboarding_status: 'not_started'
           }
         }
       });
@@ -51,8 +52,9 @@ export default function SignUp() {
 
       const userId = data?.user?.id;
       const userRole = data?.user?.user_metadata?.role;
+      const onboardingStatus = data?.user?.user_metadata?.onboarding_status;
 
-      if (!userId || !userRole) {
+      if (!userId || !userRole || !onboardingStatus) {
         throw new Error('User creation failed');
       }
 
@@ -63,9 +65,8 @@ export default function SignUp() {
         await createStartupRecord(userId);
       }
 
-      // 3. Route to signup step 2
-      console.log("ROUTE TO ADD INFO")
-      router.push(userRole === 'student' ? '/student/profile' : '/startup/profile');
+      // 3. Route to onboarding
+      router.push('/onboarding');
       
     } catch (error) {
       console.error('Signup error:', error);
@@ -116,70 +117,6 @@ export default function SignUp() {
   
     if (error) throw error;
   };
-
-  const renderStudentFields = () => (
-    <>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="relative group">
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-            First Name
-          </label>
-          <input
-            id="firstName"
-            type="text"
-            required
-            value={formData.firstName}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
-          />
-        </div>
-        <div className="relative group">
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-            Last Name
-          </label>
-          <input
-            id="lastName"
-            type="text"
-            required
-            value={formData.lastName}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
-          />
-        </div>
-      </div>
-      <div className="relative group">
-        <label htmlFor="school" className="block text-sm font-medium text-gray-700 mb-1">
-          School
-        </label>
-        <input
-          id="school"
-          type="text"
-          required
-          value={formData.school}
-          onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
-        />
-      </div>
-    </>
-  );
-
-  const renderStartupFields = () => (
-    <>
-      <div className="relative group">
-        <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-          Company Name
-        </label>
-        <input
-          id="companyName"
-          type="text"
-          required
-          value={formData.companyName}
-          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white shadow-sm transition-all duration-300 focus:border-black focus:ring-2 focus:ring-black/10 focus:outline-none group-hover:border-gray-400"
-        />
-      </div>
-    </>
-  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -268,9 +205,6 @@ export default function SignUp() {
                   placeholder="••••••••"
                 />
               </div>
-
-              {/* Render role-specific fields */}
-              {/*formData.role === 'student' ? renderStudentFields() : renderStartupFields()*/}
             </div>
 
             {error && (

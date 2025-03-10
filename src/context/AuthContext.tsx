@@ -12,7 +12,6 @@ interface UserData extends User {
 
 interface AuthContextType {
   user: UserData | null;
-  login: (email: string, password: string) => Promise<'student' | 'startup' | undefined>;
   initiateLogout: () => void;
   loading: boolean;
 }
@@ -37,16 +36,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           throw error;
         }
 
-        if (session?.user) {
-          const { data } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-
+        if (session?.user && session.user.user_metadata?.role) {
           setUser({
             ...session.user,
-            role: data?.role,
+            role: session.user.user_metadata.role,
           });
         } else {
           setUser(null);
@@ -63,10 +56,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Listen for auth state changes (e.g., login, logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
+      if (session?.user && session.user.user_metadata?.role) {
         setUser({
           ...session.user,
-          role: session.user.user_metadata?.role, // Adjust this based on your role storage
+          role: session.user.user_metadata?.role,
         });
       } else {
         setUser(null);
@@ -75,35 +68,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, [supabase]);
-
-  const login = async (email: string, password: string) => {
-    try {
-      const { data: { user: authUser }, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (authUser) {
-        const { data } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', authUser.id)
-          .single();
-
-        setUser({
-          ...authUser,
-          role: data?.role,
-        });
-
-        return data?.role; // Return role for redirect logic
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
-  };
 
   const logout = async () => {
     try {
@@ -123,7 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, initiateLogout, loading }}>
+    <AuthContext.Provider value={{ user, initiateLogout, loading }}>
       {children}
       <LogoutDialog
         isOpen={showLogoutDialog}

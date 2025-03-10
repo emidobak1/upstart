@@ -14,11 +14,11 @@ export default function Header() {
     if (user) {
       return [
         { 
-          href: user.role === 'student' ? '/dashboard/student' : '/dashboard/startup', 
+          href: user.role === 'student' ? '/student/dashboard' : '/startup/dashboard', 
           label: 'Dashboard' 
         },
         { 
-          href: user.role === 'student' ? '/dashboard/student/profile' : '/dashboard/startup/profile', 
+          href: user.role === 'student' ? '/student/profile' : '/startup/profile', 
           label: 'Profile' 
         },
       ];
@@ -39,7 +39,7 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           <Link 
-            href={user ? (user.role === 'student' ? '/dashboard/student' : '/dashboard/startup') : '/'} 
+            href={user ? (user.role === 'student' ? '/student/dashboard' : '/startup/dashboard') : '/'} 
             className="flex items-center gap-2"
           >
             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">

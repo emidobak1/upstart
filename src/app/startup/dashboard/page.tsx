@@ -246,7 +246,7 @@ export default function CompanyDashboardPage() {
 
   // View student profile - redirects to detailed profile page
   const viewStudentProfile = (studentId: string) => {
-    router.push(`/dashboard/startup/applicants/${studentId}`);
+    router.push(`/startup/applicants/${studentId}`);
   };
 
   useEffect(() => {
@@ -291,7 +291,7 @@ export default function CompanyDashboardPage() {
           {/* Post Job Button */}
           <div className="mb-6">
             <button
-              onClick={() => router.push('/dashboard/startup/post-job')}
+              onClick={() => router.push('/startup/post-job')}
               className="px-6 py-3 align-top text-gray-800 rounded-lg border border-gray-300 hover:bg-blue-300 transition-all duration-300 flex items-center gap-2"
             >
               <Plus size={16} />
@@ -317,7 +317,7 @@ export default function CompanyDashboardPage() {
               className={`px-6 py-2 text-sm font-light rounded-lg transition-all duration-300 flex items-center gap-2 ${
                 activeTab === 'applications'
                   ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-black border border-gray-300 hover:border-gray-300'
+                  : 'text-gray-600 hover:text-black border border-gray-300 hover:border-gray-400'
               }`}
             >
               <Users size={16} />
@@ -401,7 +401,7 @@ export default function CompanyDashboardPage() {
                     
                     {/* Edit Button */}
                     <button
-                      onClick={() => router.push(`/dashboard/startup/edit-job/${job.id}`)}
+                      onClick={() => router.push(`/startup/edit-job/${job.id}`)}
                       className="absolute top-4 right-4 text-gray-600 hover:text-blue-600 transition-colors"
                     >
                       <Pencil size={16} />
@@ -460,7 +460,7 @@ export default function CompanyDashboardPage() {
                     Create your first job posting to start receiving applications from talented students.
                   </p>
                   <button
-                    onClick={() => router.push('/dashboard/startup/post-job')}
+                    onClick={() => router.push('/startup/post-job')}
                     className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-lg hover:from-purple-700 hover:to-blue-600 transition-all duration-300 flex items-center gap-2 mx-auto"
                   >
                     <Plus size={16} />

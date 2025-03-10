@@ -36,18 +36,7 @@ export default function StartupProfilePage() {
       if (user?.id) {
         const supabase = createClientComponentClient();
 
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        if (userError) {
-          console.error('Error fetching user data:', userError);
-          return;
-        }
-
-        if (userData.role === 'startup') {
+        if (user.role === 'startup') {
           const { data: companyData, error: companyError } = await supabase
             .from('companies')
             .select('*')
@@ -62,7 +51,7 @@ export default function StartupProfilePage() {
           setProfileData({
             id: user.id,
             email: user.email ?? '',
-            role: userData.role,
+            role: user.role,
             name: companyData.name ?? '',
             description: companyData.description ?? '',
             website_url: companyData.website_url ?? '',
@@ -151,7 +140,7 @@ export default function StartupProfilePage() {
         <div className="mb-8">
           <button
             onClick={() => {
-                router.push('/dashboard/startup/post-job');
+                router.push('/startup/post-job');
                 console.log('Redirect to job posting page');
             }}
             className="w-36 px-6 py-3 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-300 text-center"

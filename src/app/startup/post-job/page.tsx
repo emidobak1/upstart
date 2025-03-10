@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useAuth } from '@/context/AuthContext';
 import { X } from 'lucide-react';
@@ -11,15 +11,7 @@ interface JobTag {
   name: string;
 }
 
-interface JobTagMapping {
-  job_tags: {
-    id: string;
-    name: string;
-  };
-}
-
-export default function EditJobPage() {
-  const { id } = useParams();
+export default function PostJobPage() {
   const router = useRouter();
   const { user } = useAuth();
   const supabase = createClientComponentClient();
@@ -39,64 +31,24 @@ export default function EditJobPage() {
     is_active: true,
   });
 
+  // Fetch available tags on component mount
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user?.id || !id) return;
+    const fetchTags = async () => {
+      const { data: tagsData, error: tagsError } = await supabase
+        .from('job_tags')
+        .select('*')
+        .order('name');
 
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Fetch job details
-        const { data: jobData, error: jobError } = await supabase
-          .from('jobs')
-          .select(`
-            *,
-            job_tag_mappings (
-              job_tags (
-                id,
-                name
-              )
-            )
-          `)
-          .eq('id', id)
-          .eq('company_id', user.id)
-          .single();
-
-        if (jobError) throw jobError;
-
-        // Fetch all available tags
-        const { data: tagsData, error: tagsError } = await supabase
-          .from('job_tags')
-          .select('*')
-          .order('name');
-
-        if (tagsError) throw tagsError;
-
-        setAvailableTags(tagsData);
-        setSelectedTags(jobData.job_tag_mappings.map(
-          (mapping: JobTagMapping) => mapping.job_tags.id
-        ));
-        
-        setFormData({
-          title: jobData.title,
-          description: jobData.description,
-          location: jobData.location,
-          employment_type: jobData.employment_type,
-          requirements: jobData.requirements || [],
-          responsibilities: jobData.responsibilities || [],
-          is_active: jobData.is_active,
-        });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to fetch job details');
-      } finally {
-        setLoading(false);
+      if (tagsError) {
+        console.error('Error fetching tags:', tagsError);
+        return;
       }
+
+      setAvailableTags(tagsData);
     };
 
-    fetchData();
-  }, [id, user, supabase]);
+    fetchTags();
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,32 +56,34 @@ export default function EditJobPage() {
     setError(null);
 
     try {
-      if (!user?.id || !id) {
-        throw new Error('User not authenticated or job ID missing');
+      if (!user?.id) {
+        throw new Error('User not authenticated');
       }
 
-      // Update job posting
-      const { error: updateError } = await supabase
+      // Insert job posting
+      const { data: jobData, error: insertError } = await supabase
         .from('jobs')
-        .update({
-          ...formData,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .eq('company_id', user.id);
+        .insert([
+          {
+            title: formData.title,
+            description: formData.description,
+            location: formData.location,
+            employment_type: formData.employment_type,
+            requirements: formData.requirements,
+            responsibilities: formData.responsibilities,
+            is_active: formData.is_active,
+            company_id: user.id,
+          },
+        ])
+        .select()
+        .single();
 
-      if (updateError) throw updateError;
+      if (insertError) throw insertError;
 
-      // Delete existing tag mappings
-      await supabase
-        .from('job_tag_mappings')
-        .delete()
-        .eq('job_id', id);
-
-      // Create new tag mappings
-      if (selectedTags.length > 0) {
+      // Create tag mappings if tags are selected
+      if (selectedTags.length > 0 && jobData) {
         const mappings = selectedTags.map(tagId => ({
-          job_id: id,
+          job_id: jobData.id,
           tag_id: tagId,
         }));
 
@@ -140,10 +94,10 @@ export default function EditJobPage() {
         if (mappingError) throw mappingError;
       }
 
-      router.push('/dashboard/startup');
+      router.push('/startup/dashboard');
     } catch (error) {
-      console.error('Error updating job:', error);
-      setError(error instanceof Error ? error.message : 'An error occurred');
+      console.error('Error posting job:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred while posting the job');
     } finally {
       setLoading(false);
     }
@@ -210,11 +164,11 @@ export default function EditJobPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-light mb-2">
             <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-              Edit Job Posting
+              Post a Job
             </span>
           </h1>
           <p className="text-gray-600 font-light">
-            Update the job posting details below.
+            Fill out the form below to create a new job posting.
           </p>
         </div>
 
@@ -389,7 +343,7 @@ export default function EditJobPage() {
                 disabled={loading}
                 className="w-full px-6 py-3 text-white bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg hover:from-purple-700 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
               >
-                {loading ? 'Updating Job...' : 'Update Job'}
+                {loading ? 'Posting Job...' : 'Post Job'}
               </button>
             </div>
           </div>

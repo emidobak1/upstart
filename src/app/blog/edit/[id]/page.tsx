@@ -51,24 +51,36 @@ export default function EditBlogPostPage() {
   });
 
   useEffect(() => {
-    // Check if the current user has admin access
     const checkAdminAccess = async () => {
       if (!user?.id) {
         router.push('/login');
         return;
       }
-
-      // For simplicity, all startup users are admins
-      if (user.role === 'startup') {
-        setIsAdmin(true);
-        fetchPostData();
-      } else {
-        // Redirect non-admin users
+  
+      try {
+        const supabase = createClientComponentClient();
+  
+        // Check if the user is in the 'admin' table
+        const { data: adminData, error: adminError } = await supabase
+          .from('admin')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+  
+        if (!adminError && adminData) {
+          setIsAdmin(true);
+          fetchPostData(); // Fetch post data if the user is an admin
+        } else {
+          // Redirect non-admin users
+          router.push('/blog');
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking admin access:', error);
         router.push('/blog');
-        return;
       }
     };
-
+  
     checkAdminAccess();
   }, [user, router]);
 

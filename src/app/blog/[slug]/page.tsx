@@ -19,10 +19,6 @@ interface BlogPost {
   author_title: string;
   published_at: string;
   is_published: boolean;
-  categories?: {
-    name: string;
-    slug: string;
-  }[];
 }
 
 export default function BlogPostPage() {
@@ -44,23 +40,23 @@ export default function BlogPostPage() {
       try {
         const supabase = createClientComponentClient();
         
-        // Check if user is admin - for simplicity, all startup users are admins
-        if (user && user.role === 'startup') {
-          setIsAdmin(true);
+        // Check if user is admin by querying the 'admin' table
+        if (user) {
+          const { data: adminData, error: adminError } = await supabase
+            .from('admin')
+            .select('id')
+            .eq('id', user.id)
+            .single();
+          
+          if (!adminError && adminData) {
+            setIsAdmin(true);
+          }
         }
         
-        // Fetch post with categories
+        // Fetch post
         const { data: postData, error: postError } = await supabase
           .from('blog_posts')
-          .select(`
-            *,
-            blog_post_categories (
-              blog_categories (
-                name,
-                slug
-              )
-            )
-          `)
+          .select('*')
           .eq('slug', slug)
           .single();
           
@@ -79,44 +75,20 @@ export default function BlogPostPage() {
           return;
         }
         
-        // Transform the data
-        const transformedPost = {
-          ...postData,
-          categories: postData.blog_post_categories.map((item: any) => item.blog_categories)
-        };
+        setPost(postData);
         
-        setPost(transformedPost);
-        
-        // Get category IDs from post for related posts
-        const categoryIds = postData.blog_post_categories.map((item: any) => item.blog_categories.id);
-        
-        if (categoryIds.length > 0) {
-          // Fetch related posts from the same categories
-          const { data: relatedData, error: relatedError } = await supabase
-            .from('blog_posts')
-            .select(`
-              id,
-              title,
-              slug,
-              summary,
-              featured_image_url,
-              author,
-              author_image_url,
-              published_at,
-              blog_post_categories!inner (
-                category_id
-              )
-            `)
-            .eq('is_published', true)
-            .neq('id', postData.id)
-            .in('blog_post_categories.category_id', categoryIds)
-            .order('published_at', { ascending: false })
-            .limit(3);
-            
-          if (relatedError) throw relatedError;
+        // Fetch related posts (excluding the current post)
+        const { data: relatedData, error: relatedError } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('is_published', true)
+          .neq('id', postData.id)
+          .order('published_at', { ascending: false })
+          .limit(3);
           
-          setRelatedPosts(relatedData || []);
-        }
+        if (relatedError) throw relatedError;
+        
+        setRelatedPosts(relatedData || []);
       } catch (error) {
         console.error('Error fetching post:', error);
         setError('Failed to load blog post. Please try again.');
@@ -154,7 +126,7 @@ export default function BlogPostPage() {
     if (navigator.share) {
       navigator.share({
         title: post?.title,
-        text: post?.summary || 'Check out this article on Upstart!',
+        text: post?.summary || 'Check out this article!',
         url: window.location.href,
       })
       .catch((error) => console.log('Error sharing', error));
@@ -222,19 +194,6 @@ export default function BlogPostPage() {
       <article className="max-w-3xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
         {/* Article Header */}
         <header className="mb-10">
-          {/* Categories */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {post.categories?.map((category) => (
-              <Link 
-                key={category.slug} 
-                href={`/blog?category=${category.slug}`}
-                className="text-gray-700 hover:text-gray-900 text-sm transition-colors"
-              >
-                {category.name}
-              </Link>
-            ))}
-          </div>
-          
           {/* Title */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-gray-900 leading-tight mb-6">
             {post.title}
@@ -262,7 +221,7 @@ export default function BlogPostPage() {
               <div>
                 <div className="font-medium text-gray-900">{post.author}</div>
                 <div className="text-gray-600 text-sm">
-                  {post.author_title || "Upstart Contributor"}
+                  {post.author_title || "Contributor"}
                 </div>
               </div>
             </div>
@@ -320,7 +279,7 @@ export default function BlogPostPage() {
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-1">Written by {post.author}</h3>
-              <p className="text-gray-600 mb-2">{post.author_title || "Upstart Contributor"}</p>
+              <p className="text-gray-600 mb-2">{post.author_title || "Contributor"}</p>
               
               <button
                 onClick={sharePost}

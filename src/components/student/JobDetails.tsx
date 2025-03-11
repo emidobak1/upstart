@@ -210,7 +210,7 @@ export default function JobDetails() {
           <h2 className="text-2xl font-medium text-gray-800 mb-4">Job Not Found</h2>
           <p className="text-gray-600 mb-6">{error || "We couldn't find the job posting you're looking for."}</p>
           <Link
-            href="/dashboard/student"
+            href="/student/dashboard"
             className="inline-flex items-center text-blue-600 hover:text-blue-800"
           >
             <ArrowLeft size={16} className="mr-2" /> Back to Job Listings
@@ -253,7 +253,7 @@ export default function JobDetails() {
       <div className="max-w-4xl mx-auto px-6 relative">
         {/* Back Button */}
         <Link
-          href="/dashboard/student"
+          href="/student/dashboard"
           className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-8 transition-colors"
         >
           <ArrowLeft size={16} className="mr-2" /> Back to Jobs
@@ -314,7 +314,7 @@ export default function JobDetails() {
                 <span>Complete your profile before applying</span>
               </div>
               <Link 
-                href="/dashboard/student/profile" 
+                href="/student/profile" 
                 className="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-lg transition-colors"
               >
                 Update Profile
@@ -411,7 +411,7 @@ export default function JobDetails() {
                     )}
                   </div>
                   <Link 
-                    href="/dashboard/student/profile" 
+                    href="/student/profile" 
                     className="block mt-4 text-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors"
                   >
                     Update Profile

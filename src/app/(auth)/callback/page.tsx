@@ -43,9 +43,15 @@ export default function AuthCallback() {
 
             if (updateError) throw new Error (updateError.message);
 
-            // Refresh the session to get the updated metadata
-            const { error: refreshError } = await supabase.auth.refreshSession();
-            if (refreshError) throw new Error(refreshError.message);
+            // Refresh the session to get the updated metadata (used after redirect)
+
+            // IMPORTANT CHANGE: Remove the refresh call and instead get the session again
+            // This avoids the potential refresh token storm
+            const { data: refreshedData, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) throw new Error(sessionError.message);
+
+            const userId = refreshedData.session?.user.id;
+            if (!userId) throw new Error('Could not get user ID after update');
 
             // Create role-specific record based on the role
             if (role === 'student') {
@@ -69,10 +75,23 @@ export default function AuthCallback() {
             }
           }
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error authenticating with OAuth:', error);
-        setMessage("Authentication failed");
-        router.push('/login?error=OAuth_Signup_Failed');
+        
+        // Type guard for error with message property
+        if (
+          error && 
+          typeof error === 'object' && 
+          'message' in error && 
+          typeof error.message === 'string' && 
+          (error.message.includes('429') || error.message.includes('Too Many Requests'))
+        ) {
+          setMessage("Too many authentication attempts. Please try again in a few minutes.");
+          // Don't redirect, just show message
+        } else {
+          setMessage("Authentication failed");
+          router.push('/login?error=OAuth_Signup_Failed');
+        }
       }
     };
 

@@ -21,6 +21,7 @@ export default function Header() {
           href: user.role === 'student' ? '/student/profile' : '/startup/profile', 
           label: 'Profile' 
         },
+        { href: '/blog', label: 'Stories' },
       ];
     }
 
@@ -29,6 +30,7 @@ export default function Header() {
       { href: '/', label: 'Home' },
       { href: '/login', label: 'Login' },
       { href: '/signup', label: 'SignUp' },
+      { href: '/blog', label: 'Stories' },
     ];
   };
 

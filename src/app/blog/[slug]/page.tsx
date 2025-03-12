@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { ArrowLeft, Calendar, User, Share2, Edit, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import Image from "next/image";
 import { useAuth } from '@/context/AuthContext';
 
 interface BlogPost {
@@ -33,13 +34,15 @@ export default function BlogPostPage() {
   useEffect(() => {
     const fetchPostDetail = async () => {
       if (!slug) return;
-      
+  
       setLoading(true);
       setError(null);
-      
+  
       try {
         const supabase = createClientComponentClient();
         
+        let adminStatus = false; // Local variable instead of state update
+  
         // Check if user is admin by querying the 'admin' table
         if (user) {
           const { data: adminData, error: adminError } = await supabase
@@ -47,36 +50,37 @@ export default function BlogPostPage() {
             .select('id')
             .eq('id', user.id)
             .single();
-          
+  
           if (!adminError && adminData) {
-            setIsAdmin(true);
+            adminStatus = true; // Assign instead of updating state immediately
           }
         }
-        
+  
         // Fetch post
         const { data: postData, error: postError } = await supabase
           .from('blog_posts')
           .select('*')
           .eq('slug', slug)
           .single();
-          
+  
         if (postError) throw postError;
-        
+  
         if (!postData) {
           setError('Post not found');
           setLoading(false);
           return;
         }
-        
+  
         // If user is not admin and post is not published, don't show it
-        if (!isAdmin && !postData.is_published) {
+        if (!adminStatus && !postData.is_published) {
           setError('This post is not available');
           setLoading(false);
           return;
         }
-        
+  
+        setIsAdmin(adminStatus); // Update state once after checking everything
         setPost(postData);
-        
+  
         // Fetch related posts (excluding the current post)
         const { data: relatedData, error: relatedError } = await supabase
           .from('blog_posts')
@@ -85,9 +89,9 @@ export default function BlogPostPage() {
           .neq('id', postData.id)
           .order('published_at', { ascending: false })
           .limit(3);
-          
+  
         if (relatedError) throw relatedError;
-        
+  
         setRelatedPosts(relatedData || []);
       } catch (error) {
         console.error('Error fetching post:', error);
@@ -96,9 +100,10 @@ export default function BlogPostPage() {
         setLoading(false);
       }
     };
-    
+  
     fetchPostDetail();
   }, [slug, user]);
+  
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -122,21 +127,29 @@ export default function BlogPostPage() {
   };
   
   // Share functionality
-  const sharePost = () => {
+  const sharePost = async () => {
+    const url = window.location.href;
+    const title = post?.title || "Check this out!";
+    const text = post?.summary || "Check out this article!";
+  
     if (navigator.share) {
-      navigator.share({
-        title: post?.title,
-        text: post?.summary || 'Check out this article!',
-        url: window.location.href,
-      })
-      .catch((error) => console.log('Error sharing', error));
+      try {
+        await navigator.share({ title, text, url });
+      } catch (error) {
+        console.error("Error sharing:", error);
+      }
+    } else if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(url);
+        alert("Link copied to clipboard!");
+      } catch (error) {
+        console.error("Error copying to clipboard:", error);
+      }
     } else {
-      // Fallback for browsers that don't support navigator.share
-      navigator.clipboard.writeText(window.location.href)
-        .then(() => alert('Link copied to clipboard!'))
-        .catch((error) => console.error('Error copying to clipboard:', error));
+      console.warn("Sharing and clipboard not supported in this browser.");
     }
   };
+    
 
   if (loading) {
     return (
@@ -209,10 +222,11 @@ export default function BlogPostPage() {
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                 {post.author_image_url ? (
-                  <img 
-                    src={post.author_image_url} 
-                    alt={post.author} 
+                  <Image
+                    src={post.author_image_url}
+                    alt={post.author}
                     className="w-full h-full object-cover"
+                    fill // Keeps the same full width and height behavior
                   />
                 ) : (
                   <User className="text-gray-500" size={24} />
@@ -249,7 +263,7 @@ export default function BlogPostPage() {
         {/* Featured Image */}
         {post.featured_image_url && (
           <figure className="my-10">
-            <img 
+            <Image
               src={post.featured_image_url} 
               alt={post.title} 
               className="w-full h-auto rounded-lg"
@@ -268,7 +282,7 @@ export default function BlogPostPage() {
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
               {post.author_image_url ? (
-                <img 
+                <Image
                   src={post.author_image_url} 
                   alt={post.author} 
                   className="w-full h-full object-cover"
@@ -305,7 +319,7 @@ export default function BlogPostPage() {
               >
                 {relatedPost.featured_image_url && (
                   <div className="aspect-[3/2] mb-4 rounded-lg overflow-hidden">
-                    <img 
+                    <Image
                       src={relatedPost.featured_image_url} 
                       alt={relatedPost.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -321,7 +335,7 @@ export default function BlogPostPage() {
                 <div className="flex items-center text-sm text-gray-500">
                   <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mr-2">
                     {relatedPost.author_image_url ? (
-                      <img 
+                      <Image
                         src={relatedPost.author_image_url} 
                         alt={relatedPost.author} 
                         className="w-full h-full object-cover"

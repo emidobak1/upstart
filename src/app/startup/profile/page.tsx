@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { PencilLine, Plus, Upload, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import Image from "next/image";
 
 interface CompanyProfileData {
   id: string;
@@ -283,7 +284,7 @@ export default function StartupProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Company Logo</label>
                 {profileData.logo_url && (
                   <div className="mb-3">
-                    <img 
+                    <Image
                       src={profileData.logo_url} 
                       alt="Company Logo" 
                       className="w-24 h-24 object-cover rounded-lg border border-gray-200" 

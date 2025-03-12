@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { ArrowLeft, Building2, MapPin, Calendar, Clock, Check, ChevronRight, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import Image from "next/image";
 
 interface JobDetails {
   id: string;
@@ -381,7 +382,7 @@ export default function JobDetails() {
               <div className="flex items-center justify-center mb-6">
                 {job.companies?.logo_url ? (
                   <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
-                    <img 
+                    <Image
                       src={job.companies.logo_url} 
                       alt={`${job.companies.name} logo`}
                       className="w-full h-full object-cover" 

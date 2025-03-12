@@ -19,6 +19,7 @@ interface JobDetails {
   companies: {
     name: string;
     description?: string;
+    logo_url?: string;  // Added logo_url field
   };
   job_tag_mappings: Array<{
     job_tags: {
@@ -90,22 +91,23 @@ export default function JobDetails() {
         
         // Fetch the job with the specified ID including company data and tags
         const { data, error } = await supabase
-          .from('jobs')
-          .select(`
-            *,
-            companies (
-              name,
-              description
-            ),
-            job_tag_mappings (
-              job_tags (
-                id,
-                name
-              )
+        .from('jobs')
+        .select(`
+          *,
+          companies (
+            name,
+            description,
+            logo_url
+          ),
+          job_tag_mappings (
+            job_tags (
+              id,
+              name
             )
-          `)
-          .eq('id', id)
-          .single();
+          )
+        `)
+        .eq('id', id)
+        .single();
         
         if (error) {
           throw error;
@@ -377,14 +379,24 @@ export default function JobDetails() {
             <div className="bg-white rounded-2xl shadow-md p-8 backdrop-blur-sm bg-white/80">
               <h2 className="text-xl font-medium text-gray-900 mb-4">About the Company</h2>
               <div className="flex items-center justify-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                  {job.companies?.name?.charAt(0) || 'C'}
-                </div>
+                {job.companies?.logo_url ? (
+                  <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                    <img 
+                      src={job.companies.logo_url} 
+                      alt={`${job.companies.name} logo`}
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                    {job.companies?.name?.charAt(0) || 'C'}
+                  </div>
+                )}
               </div>
               <h3 className="text-lg font-medium text-center mb-4">{job.companies?.name}</h3>
               <p className="text-gray-600 text-sm">
                 {job.companies?.description || 
-                 'This company has not provided a detailed description yet.'}
+                'This company has not provided a detailed description yet.'}
               </p>
             </div>
             

@@ -145,20 +145,20 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Stats Section with hover effects */}
-      <div className="py-20 border-t border-gray-100">
+      {/* Stats Section with mobile-friendly layout */}
+      <div className="py-10 md:py-20 border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
+          <div className="flex flex-row justify-between gap-2 md:gap-8 text-center">
             {[
               { number: '500+', label: 'Active Projects', color: 'from-blue-500' },
               { number: '200+', label: 'Startup Partners', color: 'from-purple-500' },
               { number: '1,000+', label: 'Students Matched', color: 'from-pink-500' }
             ].map((stat, index) => (
-              <div key={index} className="group hover:transform hover:scale-105 transition-all duration-500 p-8 bg-white rounded-xl hover:shadow-xl">
-                <div className={`text-5xl font-medium bg-gradient-to-r ${stat.color} to-gray-900 bg-clip-text text-transparent mb-3 transform transition-all duration-500 group-hover:scale-110`}>
+              <div key={index} className="group hover:transform hover:scale-105 transition-all duration-500 p-4 md:p-8 bg-white rounded-xl hover:shadow-xl flex-1">
+                <div className={`text-2xl md:text-5xl font-medium bg-gradient-to-r ${stat.color} to-gray-900 bg-clip-text text-transparent mb-1 md:mb-3 transform transition-all duration-500 group-hover:scale-110`}>
                   {stat.number}
                 </div>
-                <div className="text-gray-600 group-hover:text-gray-900 transition-colors">{stat.label}</div>
+                <div className="text-xs md:text-base text-gray-600 group-hover:text-gray-900 transition-colors">{stat.label}</div>
               </div>
             ))}
           </div>

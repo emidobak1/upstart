@@ -62,7 +62,6 @@ export default function BlogPage() {
         // Filter for public view (non-admins only see published posts)
         const filteredPosts = isAdmin 
           ? postsData // Admins see all posts, including drafts
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           : postsData.filter((post: any) => post.is_published); // Non-admins only see published posts
 
         // Set featured post

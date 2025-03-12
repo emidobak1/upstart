@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect,useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useAuth } from '@/context/AuthContext';
 import { Search, PlusCircle, Edit, Trash2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Image from "next/image";
 
 interface BlogPost {
   id: string;
@@ -38,45 +37,56 @@ export default function BlogPage() {
       setLoading(true);
       try {
         const supabase = createClientComponentClient();
-  
-        // Check if user is admin
+
+        // Check if user is admin by querying the 'admin' table
         if (user) {
           const { data: adminData, error: adminError } = await supabase
-            .from("admin")
-            .select("id")
-            .eq("id", user.id)
+            .from('admin')
+            .select('id')
+            .eq('id', user.id)
             .single();
-  
+          
           if (!adminError && adminData) {
             setIsAdmin(true);
           }
         }
-  
-        // Fetch all posts
+
+        // Fetch all posts (including drafts for admins)
         const { data: postsData, error: postsError } = await supabase
-          .from("blog_posts")
-          .select("*")
-          .order("published_at", { ascending: false });
-  
+          .from('blog_posts')
+          .select('*')
+          .order('published_at', { ascending: false });
+
         if (postsError) throw postsError;
-  
-        setPosts(postsData);
-        setFeaturedPost(postsData.find((post) => post.is_featured) || null);
+
+        // Filter for public view (non-admins only see published posts)
+        const filteredPosts = isAdmin 
+          ? postsData // Admins see all posts, including drafts
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          : postsData.filter((post: any) => post.is_published); // Non-admins only see published posts
+
+        // Set featured post
+        const featured = filteredPosts.find((post: BlogPost) => post.is_featured);
+        setFeaturedPost(featured || null);
+
+        // Set all posts
+        setPosts(filteredPosts);
       } catch (error) {
-        console.error("Error fetching blog data:", error);
-        setError("Failed to load blog posts. Please try again later.");
+        console.error('Error fetching blog data:', error);
+        setError('Failed to load blog posts. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchBlogData();
-  }, [user]); // Removed isAdmin from dependencies
-  
-  // Use useMemo to filter posts outside useEffect
-  const filteredPosts = useMemo(() => {
-    return isAdmin ? posts : posts.filter((post) => post.is_published);
-  }, [isAdmin, posts]); // Now it properly depends on both isAdmin and posts
+  }, [user]);
+
+  // Filter posts based on search query
+  const filteredPosts = posts.filter((post) =>
+    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.summary.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -328,7 +338,7 @@ export default function BlogPage() {
                   <Link href={`/blog/${featuredPost.slug}`} className="group">
                     {featuredPost.featured_image_url && (
                       <div className="aspect-[16/9] w-full mb-6 overflow-hidden rounded-lg">
-                        <Image
+                        <img 
                           src={featuredPost.featured_image_url} 
                           alt={featuredPost.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -353,7 +363,7 @@ export default function BlogPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                           {featuredPost.author_image_url ? (
-                            <Image 
+                            <img 
                               src={featuredPost.author_image_url} 
                               alt={featuredPost.author} 
                               className="w-full h-full object-cover"
@@ -418,7 +428,7 @@ export default function BlogPage() {
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                               {post.author_image_url ? (
-                                <Image
+                                <img 
                                   src={post.author_image_url} 
                                   alt={post.author} 
                                   className="w-full h-full object-cover"
@@ -450,7 +460,7 @@ export default function BlogPage() {
                       
                       {post.featured_image_url && (
                         <div className="h-48 md:h-auto bg-gray-100 rounded-lg overflow-hidden">
-                          <Image
+                          <img 
                             src={post.featured_image_url} 
                             alt={post.title} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

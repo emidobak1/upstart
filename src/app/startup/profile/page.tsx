@@ -37,7 +37,6 @@ export default function StartupProfilePage() {
   });
 
   // Logo upload states
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);

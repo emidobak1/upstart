@@ -371,7 +371,7 @@ export default function StudentDashboard() {
                       Posted {formatDate(job.created_at)}
                     </span>
                     <Link 
-                      href={`/dashboard/student/jobs/${job.id}`}
+                      href={`/student/jobs/${job.id}`}
                       className="text-sm text-blue-600 hover:text-blue-800 group-hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >

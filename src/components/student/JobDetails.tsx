@@ -19,6 +19,7 @@ interface JobDetails {
   companies: {
     name: string;
     description?: string;
+    logo_url?: string;  // Added logo_url field
   };
   job_tag_mappings: Array<{
     job_tags: {
@@ -90,22 +91,23 @@ export default function JobDetails() {
         
         // Fetch the job with the specified ID including company data and tags
         const { data, error } = await supabase
-          .from('jobs')
-          .select(`
-            *,
-            companies (
-              name,
-              description
-            ),
-            job_tag_mappings (
-              job_tags (
-                id,
-                name
-              )
+        .from('jobs')
+        .select(`
+          *,
+          companies (
+            name,
+            description,
+            logo_url
+          ),
+          job_tag_mappings (
+            job_tags (
+              id,
+              name
             )
-          `)
-          .eq('id', id)
-          .single();
+          )
+        `)
+        .eq('id', id)
+        .single();
         
         if (error) {
           throw error;
@@ -210,7 +212,7 @@ export default function JobDetails() {
           <h2 className="text-2xl font-medium text-gray-800 mb-4">Job Not Found</h2>
           <p className="text-gray-600 mb-6">{error || "We couldn't find the job posting you're looking for."}</p>
           <Link
-            href="/dashboard/student"
+            href="/student/dashboard"
             className="inline-flex items-center text-blue-600 hover:text-blue-800"
           >
             <ArrowLeft size={16} className="mr-2" /> Back to Job Listings
@@ -253,7 +255,7 @@ export default function JobDetails() {
       <div className="max-w-4xl mx-auto px-6 relative">
         {/* Back Button */}
         <Link
-          href="/dashboard/student"
+          href="/student/dashboard"
           className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-8 transition-colors"
         >
           <ArrowLeft size={16} className="mr-2" /> Back to Jobs
@@ -314,7 +316,7 @@ export default function JobDetails() {
                 <span>Complete your profile before applying</span>
               </div>
               <Link 
-                href="/dashboard/student/profile" 
+                href="/student/profile" 
                 className="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-lg transition-colors"
               >
                 Update Profile
@@ -377,14 +379,24 @@ export default function JobDetails() {
             <div className="bg-white rounded-2xl shadow-md p-8 backdrop-blur-sm bg-white/80">
               <h2 className="text-xl font-medium text-gray-900 mb-4">About the Company</h2>
               <div className="flex items-center justify-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                  {job.companies?.name?.charAt(0) || 'C'}
-                </div>
+                {job.companies?.logo_url ? (
+                  <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                    <img 
+                      src={job.companies.logo_url} 
+                      alt={`${job.companies.name} logo`}
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                    {job.companies?.name?.charAt(0) || 'C'}
+                  </div>
+                )}
               </div>
               <h3 className="text-lg font-medium text-center mb-4">{job.companies?.name}</h3>
               <p className="text-gray-600 text-sm">
                 {job.companies?.description || 
-                 'This company has not provided a detailed description yet.'}
+                'This company has not provided a detailed description yet.'}
               </p>
             </div>
             
@@ -411,7 +423,7 @@ export default function JobDetails() {
                     )}
                   </div>
                   <Link 
-                    href="/dashboard/student/profile" 
+                    href="/student/profile" 
                     className="block mt-4 text-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors"
                   >
                     Update Profile

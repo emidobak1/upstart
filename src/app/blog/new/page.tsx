@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Link as LinkIcon, Image, AlignJustify } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { uploadBlogImage} from '@/utils/supabaseStorage';
 
 interface BlogPost {
   title: string;
@@ -124,31 +125,16 @@ export default function NewBlogPostPage() {
     
     setUploading(true);
     try {
-      const supabase = createClientComponentClient();
+      // Use the uploadBlogImage utility to upload to the blog_picture bucket
+      const imageUrl = await uploadBlogImage(imageFile);
       
-      // Create a unique file path
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `blog/${fileName}`;
-      
-      // Upload file to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, imageFile);
-      
-      if (uploadError) throw uploadError;
-      
-      // Get the public URL
-      const { data } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath);
-      
-      // Update form data
+      // Update form data with the new image URL
       setFormData(prev => ({
         ...prev,
-        featured_image_url: data.publicUrl
+        featured_image_url: imageUrl
       }));
       
+      // Reset file input
       setImageFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -156,6 +142,7 @@ export default function NewBlogPostPage() {
     } catch (error) {
       console.error('Error uploading image:', error);
       setError('Failed to upload image');
+      // If your error state variable is named differently, adjust this line
     } finally {
       setUploading(false);
     }

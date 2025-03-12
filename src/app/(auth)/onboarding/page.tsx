@@ -154,7 +154,7 @@ export default function OnboardingPage() {
               </h2>
             </div>
             <p className="text-sm text-gray-600">
-              Let's get you set up with your account
+              Let&apos;s get you set up with your account
             </p>
           </div>
 

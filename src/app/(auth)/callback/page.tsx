@@ -20,7 +20,6 @@ export default function AuthCallback() {
         if (error) throw new Error ('Authentication failed');
 
         if (data?.session) {
-          const userId = data.session.user.id;
           const userMetadata = data.session.user.user_metadata;
           
           if (!userMetadata) throw new Error('Error accessing user data');
